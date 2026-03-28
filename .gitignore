@@ -1,0 +1,19 @@
+# Arduino IDE build artifacts
+firmware/minecraft_lamp/build/
+*.elf
+*.bin
+*.hex
+*.map
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Node (por si acaso)
+node_modules/
