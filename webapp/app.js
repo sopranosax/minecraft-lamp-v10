@@ -8,7 +8,8 @@ const App = {
   currentMac:    null,
   currentDevice: null,
   refreshTimer:  null,
-  selectedSsid:  null
+  selectedSsid:  null,
+  wifiLoaded:    false
 };
 
 // ── Helpers DOM ────────────────────────────────────────────────
@@ -162,10 +163,10 @@ $('btn-back').addEventListener('click', () => {
 
 async function openDevice(mac) {
   App.currentMac = mac;
+  App.wifiLoaded = false;
   showView('view-detail');
   await refreshDeviceDetail();
-
-  // Auto-refresh del estado cada 30s
+  loadWifiScan();
   App.refreshTimer = setInterval(refreshDeviceDetail, CONFIG.REFRESH_INTERVAL_MS);
 }
 
@@ -203,8 +204,10 @@ function _renderDeviceDetail(dev) {
   $('ctrl-color').value  = color.startsWith('#') ? color : '#' + color;
   $('ctrl-color-hex').textContent = color;
   const manBri = cfg.manual_brightness !== undefined ? cfg.manual_brightness : 200;
+  const manPct = Math.round(manBri / 255 * 100);
   $('ctrl-brightness').value = manBri;
-  $('ctrl-bri-val').textContent = Math.round(manBri / 255 * 100) + '%';
+  $('ctrl-bri-val').textContent = manPct + '%';
+  $('ctrl-brightness').style.setProperty('--val', manPct + '%');
 
   // ── Movimiento
   const mode = cfg.motion_mode || 'NO_BLINK';
@@ -212,21 +215,26 @@ function _renderDeviceDetail(dev) {
   $('motion-secs').value = cfg.motion_blink_seconds || 5;
   $('blink-seconds-row').classList.toggle('hidden', mode !== 'BLINK');
 
-  // ── Horario
+  // -- Horario
   const schedOn = cfg.schedule_enabled === true || cfg.schedule_enabled === 'true';
   $('sched-enabled').checked = schedOn;
   $('sched-fields').classList.toggle('hidden', !schedOn);
-  if (schedOn) {
+
+  const hasSchedData = cfg.schedule_start_time && cfg.schedule_end_time;
+  if (hasSchedData) {
+    const schBri = cfg.schedule_brightness !== undefined ? cfg.schedule_brightness : 200;
     $('sched-start').value           = cfg.schedule_start_time || '';
     $('sched-end').value             = cfg.schedule_end_time   || '';
     const sc = (cfg.schedule_color_hex || '#ff6b00').toUpperCase();
     $('sched-color').value           = sc.startsWith('#') ? sc : '#ffffff';
     $('sched-color-hex').textContent = sc;
-    const schBri = cfg.schedule_brightness !== undefined ? cfg.schedule_brightness : 200;
     $('sched-brightness').value = schBri;
-    $('sched-bri-val').textContent = Math.round(schBri / 255 * 100) + '%';
+    const schPct = Math.round(schBri / 255 * 100);
+    $('sched-bri-val').textContent = schPct + '%';
+    $('sched-brightness').style.setProperty('--val', schPct + '%');
+    const tag = schedOn ? '[ON]' : '[OFF]';
     $('sched-summary').classList.remove('hidden');
-    $('sched-summary').textContent = `⏰ ${cfg.schedule_start_time} → ${cfg.schedule_end_time}  🎨 ${cfg.schedule_color_hex}  👁️ ${Math.round(schBri/255*100)}%`;
+    $('sched-summary').textContent = `${tag}  ${cfg.schedule_start_time} -> ${cfg.schedule_end_time}  ${sc}  ${schPct}%`;
   } else {
     $('sched-summary').classList.add('hidden');
   }
@@ -240,10 +248,14 @@ $('sched-color').addEventListener('input', () => {
   $('sched-color-hex').textContent = $('sched-color').value.toUpperCase();
 });
 $('ctrl-brightness').addEventListener('input', () => {
-  $('ctrl-bri-val').textContent = Math.round($('ctrl-brightness').value / 255 * 100) + '%';
+  const pct = Math.round($('ctrl-brightness').value / 255 * 100);
+  $('ctrl-bri-val').textContent = pct + '%';
+  $('ctrl-brightness').style.setProperty('--val', pct + '%');
 });
 $('sched-brightness').addEventListener('input', () => {
-  $('sched-bri-val').textContent = Math.round($('sched-brightness').value / 255 * 100) + '%';
+  const pct = Math.round($('sched-brightness').value / 255 * 100);
+  $('sched-bri-val').textContent = pct + '%';
+  $('sched-brightness').style.setProperty('--val', pct + '%');
 });
 
 // ── Botón control manual ───────────────────────────────────────
@@ -323,10 +335,7 @@ $('btn-sched-save').addEventListener('click', async () => {
 });
 
 // ── Sección WiFi ───────────────────────────────────────────────
-document.querySelector('[data-toggle="wifi-body"]').addEventListener('click', async () => {
-  if (!App.currentMac) return;
-  await loadWifiScan();
-}, { capture: false });
+// WiFi scan pre-loaded in openDevice()
 
 async function loadWifiScan() {
   $('wifi-no-scan').classList.add('hidden');
