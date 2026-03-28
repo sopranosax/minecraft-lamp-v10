@@ -1,6 +1,6 @@
 // ============================================================
 // minecraft_lamp.ino — Loop cooperativo principal
-// IoT Lámpara WiFi v10  —  Firmware v1.1.1
+// IoT Lámpara WiFi v10  —  Firmware v1.2.0
 //
 // Hardware:
 //   ESP32, NeoPixel WS2812B, PIR HC-SR501, RTC DS3231
