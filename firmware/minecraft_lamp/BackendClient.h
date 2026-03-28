@@ -146,12 +146,14 @@ private:
   void _applyJsonConfig(DeviceConfig& cfg, JsonObject& obj) {
     if (obj.containsKey("manual_power_state"))                strlcpy(cfg.manualPowerState, obj["manual_power_state"] | "", sizeof(cfg.manualPowerState));
     if (obj.containsKey("manual_color_hex"))                  strlcpy(cfg.manualColorHex,   obj["manual_color_hex"]   | "", sizeof(cfg.manualColorHex));
+    if (obj.containsKey("manual_brightness"))                 cfg.manualBrightness            = obj["manual_brightness"]   | 200;
     if (obj.containsKey("motion_mode"))                       strlcpy(cfg.motionMode,        obj["motion_mode"]        | "", sizeof(cfg.motionMode));
     if (obj.containsKey("motion_blink_seconds"))              cfg.motionBlinkSeconds          = obj["motion_blink_seconds"]  | 5;
     if (obj.containsKey("schedule_enabled"))                  cfg.scheduleEnabled             = obj["schedule_enabled"]      | false;
     if (obj.containsKey("schedule_start_time"))               strlcpy(cfg.scheduleStartTime, obj["schedule_start_time"] | "", sizeof(cfg.scheduleStartTime));
     if (obj.containsKey("schedule_end_time"))                 strlcpy(cfg.scheduleEndTime,   obj["schedule_end_time"]   | "", sizeof(cfg.scheduleEndTime));
     if (obj.containsKey("schedule_color_hex"))                strlcpy(cfg.scheduleColorHex,  obj["schedule_color_hex"]  | "", sizeof(cfg.scheduleColorHex));
+    if (obj.containsKey("schedule_brightness"))               cfg.scheduleBrightness          = obj["schedule_brightness"]  | 200;
     if (obj.containsKey("reconnect_interval_seconds"))        cfg.reconnectIntervalSeconds    = obj["reconnect_interval_seconds"] | 60;
     if (obj.containsKey("recovery_bootstrap_every_n_cycles")) cfg.recoveryBootstrapEveryNCycles = obj["recovery_bootstrap_every_n_cycles"] | 5;
   }

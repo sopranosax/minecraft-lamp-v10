@@ -202,6 +202,9 @@ function _renderDeviceDetail(dev) {
   const color = (cfg.manual_color_hex || '#ffffff').toUpperCase();
   $('ctrl-color').value  = color.startsWith('#') ? color : '#' + color;
   $('ctrl-color-hex').textContent = color;
+  const manBri = cfg.manual_brightness !== undefined ? cfg.manual_brightness : 200;
+  $('ctrl-brightness').value = manBri;
+  $('ctrl-bri-val').textContent = Math.round(manBri / 255 * 100) + '%';
 
   // ── Movimiento
   const mode = cfg.motion_mode || 'NO_BLINK';
@@ -219,19 +222,28 @@ function _renderDeviceDetail(dev) {
     const sc = (cfg.schedule_color_hex || '#ff6b00').toUpperCase();
     $('sched-color').value           = sc.startsWith('#') ? sc : '#ffffff';
     $('sched-color-hex').textContent = sc;
+    const schBri = cfg.schedule_brightness !== undefined ? cfg.schedule_brightness : 200;
+    $('sched-brightness').value = schBri;
+    $('sched-bri-val').textContent = Math.round(schBri / 255 * 100) + '%';
     $('sched-summary').classList.remove('hidden');
-    $('sched-summary').textContent = `⏰ ${cfg.schedule_start_time} → ${cfg.schedule_end_time}  🎨 ${cfg.schedule_color_hex}`;
+    $('sched-summary').textContent = `⏰ ${cfg.schedule_start_time} → ${cfg.schedule_end_time}  🎨 ${cfg.schedule_color_hex}  👁️ ${Math.round(schBri/255*100)}%`;
   } else {
     $('sched-summary').classList.add('hidden');
   }
 }
 
-// ── Color pickers sincronizados ────────────────────────────────
+// ── Color pickers y sliders sincronizados ─────────────────────
 $('ctrl-color').addEventListener('input', () => {
   $('ctrl-color-hex').textContent = $('ctrl-color').value.toUpperCase();
 });
 $('sched-color').addEventListener('input', () => {
   $('sched-color-hex').textContent = $('sched-color').value.toUpperCase();
+});
+$('ctrl-brightness').addEventListener('input', () => {
+  $('ctrl-bri-val').textContent = Math.round($('ctrl-brightness').value / 255 * 100) + '%';
+});
+$('sched-brightness').addEventListener('input', () => {
+  $('sched-bri-val').textContent = Math.round($('sched-brightness').value / 255 * 100) + '%';
 });
 
 // ── Botón control manual ───────────────────────────────────────
@@ -239,10 +251,11 @@ $('btn-control-save').addEventListener('click', async () => {
   const btn    = $('btn-control-save');
   const power  = $('ctrl-power').checked ? 'ON' : 'OFF';
   const color  = $('ctrl-color').value.toUpperCase();
+  const brightness = parseInt($('ctrl-brightness').value);
   btn.disabled = true;
   btn.textContent = 'Guardando…';
   try {
-    const res = await API.setControl(App.currentMac, power, color);
+    const res = await API.setControl(App.currentMac, power, color, brightness);
     toast(res.success ? '✅ Control actualizado' : '❌ ' + res.error, res.success ? 'success' : 'error');
     if (res.success) await refreshDeviceDetail();
   } catch (err) {
@@ -287,18 +300,19 @@ $('sched-enabled').addEventListener('change', () => {
 
 // ── Botón horario ──────────────────────────────────────────────
 $('btn-sched-save').addEventListener('click', async () => {
-  const btn     = $('btn-sched-save');
-  const enabled = $('sched-enabled').checked;
-  const start   = $('sched-start').value;
-  const end     = $('sched-end').value;
-  const color   = $('sched-color').value.toUpperCase();
+  const btn        = $('btn-sched-save');
+  const enabled    = $('sched-enabled').checked;
+  const start      = $('sched-start').value;
+  const end        = $('sched-end').value;
+  const color      = $('sched-color').value.toUpperCase();
+  const brightness = parseInt($('sched-brightness').value);
 
   if (enabled && (!start || !end)) {
     toast('⚠️ Ingresa hora de inicio y fin', 'error'); return;
   }
   btn.disabled = true; btn.textContent = 'Guardando…';
   try {
-    const res = await API.setSchedule(App.currentMac, enabled, start, end, color);
+    const res = await API.setSchedule(App.currentMac, enabled, start, end, color, brightness);
     toast(res.success ? '✅ Horario actualizado' : '❌ ' + res.error, res.success ? 'success' : 'error');
     if (res.success) await refreshDeviceDetail();
   } catch (err) {

@@ -6,7 +6,7 @@
 
 // ─── WiFi Bootstrap (compilado en firmware) ──────────────────
 // IMPORTANTE: cambiar por las credenciales reales de tu red bootstrap
-#define BOOTSTRAP_SSID "AndroidAP2D14"
+#define BOOTSTRAP_SSID "ANIBAL"
 #define BOOTSTRAP_PASSWORD "igkz1998"
 
 // ─── Backend Apps Script ─────────────────────────────────────
@@ -18,7 +18,7 @@
 
 // ─── Hardware pins ────────────────────────────────────────────
 #define NEOPIXEL_PIN 5   // GPIO del NeoPixel WS2812B
-#define NEOPIXEL_COUNT 1 // Número de LEDs
+#define NEOPIXEL_COUNT 16 // ⚠️ AJUSTAR al número real de LEDs de tu anillo (ej: 8, 12, 16, 24)
 #define PIR_PIN 14       // GPIO del sensor PIR HC-SR501
 #define RTC_SDA_PIN 21   // I2C SDA para DS3231
 #define RTC_SCL_PIN 22   // I2C SCL para DS3231

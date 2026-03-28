@@ -52,22 +52,25 @@ const API = (() => {
   const setWifiConfig = (mac, ssid, password) =>
     post('wifi_config', { mac, ssid, password });
 
-  // ── Control manual ─────────────────────────────────────────
-  const setControl = (mac, manualPowerState, manualColorHex) =>
-    post('control', { mac, manual_power_state: manualPowerState, manual_color_hex: manualColorHex });
+  // ── Control manual ───────────────────────────────────
+  const setControl = (mac, manualPowerState, manualColorHex, manualBrightness) =>
+    post('control', { mac, manual_power_state: manualPowerState,
+                      manual_color_hex: manualColorHex,
+                      manual_brightness: manualBrightness });
 
   // ── Movimiento ─────────────────────────────────────────────
   const setMotionConfig = (mac, motionMode, motionBlinkSeconds) =>
     post('motion_config', { mac, motion_mode: motionMode, motion_blink_seconds: motionBlinkSeconds });
 
-  // ── Horario ────────────────────────────────────────────────
-  const setSchedule = (mac, enabled, startTime, endTime, colorHex) =>
+  // ── Horario ─────────────────────────────────────────
+  const setSchedule = (mac, enabled, startTime, endTime, colorHex, brightness) =>
     post('schedule', {
       mac,
       schedule_enabled:    enabled,
       schedule_start_time: startTime,
       schedule_end_time:   endTime,
-      schedule_color_hex:  colorHex
+      schedule_color_hex:  colorHex,
+      schedule_brightness: brightness
     });
 
   return { login, logout, getDevices, getDevice, getScan, getLogs,

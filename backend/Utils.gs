@@ -105,12 +105,14 @@ function buildDeviceConfig(row) {
   return {
     manual_power_state:                String(row[COL.DEVICES.MANUAL_POWER_STATE - 1]) || DEFAULTS.MANUAL_POWER_STATE,
     manual_color_hex:                  String(row[COL.DEVICES.MANUAL_COLOR_HEX - 1])   || DEFAULTS.MANUAL_COLOR_HEX,
+    manual_brightness:                 Number(row[COL.DEVICES.MANUAL_BRIGHTNESS - 1])  || DEFAULTS.MANUAL_BRIGHTNESS,
     motion_mode:                       String(row[COL.DEVICES.MOTION_MODE - 1])         || DEFAULTS.MOTION_MODE,
     motion_blink_seconds:              Number(row[COL.DEVICES.MOTION_BLINK_SECONDS - 1])|| DEFAULTS.MOTION_BLINK_SECONDS,
     schedule_enabled:                  String(row[COL.DEVICES.SCHEDULE_ENABLED - 1])    === 'TRUE',
     schedule_start_time:               String(row[COL.DEVICES.SCHEDULE_START_TIME - 1]) || '',
     schedule_end_time:                 String(row[COL.DEVICES.SCHEDULE_END_TIME - 1])   || '',
     schedule_color_hex:                String(row[COL.DEVICES.SCHEDULE_COLOR_HEX - 1])  || '',
+    schedule_brightness:               Number(row[COL.DEVICES.SCHEDULE_BRIGHTNESS - 1]) || DEFAULTS.SCHEDULE_BRIGHTNESS,
     reconnect_interval_seconds:        Number(row[COL.DEVICES.RECONNECT_INTERVAL_SECONDS - 1]) || DEFAULTS.RECONNECT_INTERVAL_SECONDS,
     recovery_bootstrap_every_n_cycles: Number(row[COL.DEVICES.RECOVERY_BOOTSTRAP_EVERY_N_CYCLES - 1]) || DEFAULTS.RECOVERY_BOOTSTRAP_EVERY_N_CYCLES
   };

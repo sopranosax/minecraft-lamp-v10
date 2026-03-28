@@ -9,9 +9,9 @@ function handleControl(mac, body) {
   if (!userId) return errorResponse('No autorizado', 'UNAUTHORIZED');
   if (!mac)    return errorResponse('mac es requerido', 'MISSING_MAC');
 
-  const { manual_power_state, manual_color_hex } = body;
-  if (!manual_power_state && !manual_color_hex)
-    return errorResponse('Se requiere manual_power_state y/o manual_color_hex', 'MISSING_FIELDS');
+  const { manual_power_state, manual_color_hex, manual_brightness } = body;
+  if (!manual_power_state && !manual_color_hex && manual_brightness === undefined)
+    return errorResponse('Se requiere manual_power_state, manual_color_hex y/o manual_brightness', 'MISSING_FIELDS');
 
   const lock = LockService.getScriptLock();
   lock.waitLock(10000);
@@ -34,9 +34,16 @@ function handleControl(mac, body) {
       setCell(sheet, found.rowNumber, COL.DEVICES.MANUAL_COLOR_HEX, manual_color_hex.toUpperCase());
       addLog(mac, EV.COLOR_CHANGED, nowTs, manual_color_hex, '', 'WEBAPP');
     }
+    if (manual_brightness !== undefined) {
+      const bri = Number(manual_brightness);
+      if (isNaN(bri) || bri < 0 || bri > 255)
+        return errorResponse('manual_brightness debe ser 0-255', 'INVALID_BRIGHTNESS');
+      setCell(sheet, found.rowNumber, COL.DEVICES.MANUAL_BRIGHTNESS, bri);
+      addLog(mac, EV.BRIGHTNESS_CHANGED, nowTs, String(bri), '', 'WEBAPP');
+    }
     setCell(sheet, found.rowNumber, COL.DEVICES.UPDATED_AT, nowTs);
 
-    return successResponse({ updated: true, manual_power_state, manual_color_hex });
+    return successResponse({ updated: true, manual_power_state, manual_color_hex, manual_brightness });
   } finally {
     lock.releaseLock();
   }
@@ -86,7 +93,8 @@ function handleSchedule(mac, body) {
   if (!userId) return errorResponse('No autorizado', 'UNAUTHORIZED');
   if (!mac)    return errorResponse('mac es requerido', 'MISSING_MAC');
 
-  const { schedule_enabled, schedule_start_time, schedule_end_time, schedule_color_hex } = body;
+  const { schedule_enabled, schedule_start_time, schedule_end_time,
+          schedule_color_hex, schedule_brightness } = body;
 
   const enabled = String(schedule_enabled).toUpperCase() === 'TRUE' || schedule_enabled === true;
 
@@ -98,6 +106,11 @@ function handleSchedule(mac, body) {
       return errorResponse('Formato de hora inválido, usar HH:MM', 'INVALID_TIME_FORMAT');
     if (!/^#[0-9A-Fa-f]{6}$/.test(schedule_color_hex))
       return errorResponse('schedule_color_hex debe tener formato #RRGGBB', 'INVALID_COLOR');
+    if (schedule_brightness !== undefined) {
+      const bri = Number(schedule_brightness);
+      if (isNaN(bri) || bri < 0 || bri > 255)
+        return errorResponse('schedule_brightness debe ser 0-255', 'INVALID_BRIGHTNESS');
+    }
   }
 
   const lock = LockService.getScriptLock();
@@ -113,16 +126,19 @@ function handleSchedule(mac, body) {
       setCell(sheet, found.rowNumber, COL.DEVICES.SCHEDULE_START_TIME,  schedule_start_time);
       setCell(sheet, found.rowNumber, COL.DEVICES.SCHEDULE_END_TIME,    schedule_end_time);
       setCell(sheet, found.rowNumber, COL.DEVICES.SCHEDULE_COLOR_HEX,   schedule_color_hex.toUpperCase());
+      if (schedule_brightness !== undefined)
+        setCell(sheet, found.rowNumber, COL.DEVICES.SCHEDULE_BRIGHTNESS, Number(schedule_brightness));
     }
     setCell(sheet, found.rowNumber, COL.DEVICES.UPDATED_AT, nowTs);
     addLog(mac, EV.SCHEDULE_UPDATED, nowTs,
            enabled ? schedule_start_time + '-' + schedule_end_time : 'DISABLED', '', 'WEBAPP');
 
     return successResponse({
-      schedule_enabled: enabled,
+      schedule_enabled:    enabled,
       schedule_start_time: schedule_start_time || '',
       schedule_end_time:   schedule_end_time   || '',
-      schedule_color_hex:  schedule_color_hex  || ''
+      schedule_color_hex:  schedule_color_hex  || '',
+      schedule_brightness: schedule_brightness !== undefined ? Number(schedule_brightness) : ''
     });
   } finally {
     lock.releaseLock();

@@ -91,7 +91,7 @@ void setup() {
   }
 
   // 8. Aplicar último estado conocido al LED
-  led.applyConfig(cfg.manualPowerState, cfg.manualColorHex);
+  led.applyConfig(cfg.manualPowerState, cfg.manualColorHex, cfg.manualBrightness);
   DBGLN("[SETUP] Setup completo. Iniciando loop.");
 }
 
@@ -208,7 +208,7 @@ void _pollBackend() {
   if (!ok) { DBGLN("[POLL] Fallo al contactar backend."); return; }
 
   // Aplicar cambios de configuración al LED
-  led.applyConfig(cfg.manualPowerState, cfg.manualColorHex);
+  led.applyConfig(cfg.manualPowerState, cfg.manualColorHex, cfg.manualBrightness);
 
   // Si hay credenciales pendientes, intentar conectar
   if (hasPending && strlen(pendSsid) > 0) {
@@ -238,9 +238,9 @@ void _evaluateSchedule() {
   bool shouldBeOn = rtc.isWithinSchedule(cfg.scheduleStartTime, cfg.scheduleEndTime);
 
   if (shouldBeOn && !scheduleCurrentlyOn) {
-    // Entrar en franja horaria → encender con color programado
-    DBGF("[SCHED] Inicio horario: %s\n", cfg.scheduleColorHex);
-    led.setColor(cfg.scheduleColorHex);
+    // Entrar en franja horaria → encender con color y brillo programado
+    DBGF("[SCHED] Inicio horario: %s bri=%d\n", cfg.scheduleColorHex, cfg.scheduleBrightness);
+    led.setColor(cfg.scheduleColorHex, (uint8_t)cfg.scheduleBrightness);
     scheduleCurrentlyOn = true;
   } else if (!shouldBeOn && scheduleCurrentlyOn) {
     // Salir de franja horaria → apagar

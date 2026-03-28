@@ -115,6 +115,30 @@ input[type="color"].color-picker {
 }
 .color-hex { font-family: monospace; color: var(--muted); font-size: .9rem; }
 
+/* ── Range slider (intensidad) ──────────────────────────────── */
+input[type="range"].range-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: .4rem;
+  border-radius: 2rem;
+  background: linear-gradient(to right, var(--primary) var(--val, 78%), var(--border) var(--val, 78%));
+  outline: none; cursor: pointer;
+}
+input[type="range"].range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 1.25rem; height: 1.25rem; border-radius: 50%;
+  background: var(--primary); border: 2px solid #fff;
+  box-shadow: 0 0 6px rgba(124,111,255,0.5);
+  cursor: pointer; transition: transform var(--transition);
+}
+input[type="range"].range-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type="range"].range-slider::-moz-range-thumb {
+  width: 1.25rem; height: 1.25rem; border-radius: 50%;
+  background: var(--primary); border: 2px solid #fff;
+  box-shadow: 0 0 6px rgba(124,111,255,0.5);
+  cursor: pointer;
+}
+
+
 /* ── Botones ────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem;

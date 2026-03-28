@@ -46,7 +46,9 @@ const COL = {
     RECOVERY_BOOTSTRAP_EVERY_N_CYCLES:19,
     FIRMWARE_VERSION:                 20,
     CREATED_AT:                       21,
-    UPDATED_AT:                       22
+    UPDATED_AT:                       22,
+    MANUAL_BRIGHTNESS:                23,  // 0-255
+    SCHEDULE_BRIGHTNESS:              24   // 0-255
   },
   WIFI_SCAN: {
     SCAN_ID:       1,
@@ -111,9 +113,11 @@ const DEFAULTS = {
   MOTION_BLINK_SECONDS:              5,
   MANUAL_POWER_STATE:                'OFF',
   MANUAL_COLOR_HEX:                  '#FFFFFF',
+  MANUAL_BRIGHTNESS:                 200,  // 0-255 (~78%)
+  SCHEDULE_BRIGHTNESS:               200,
   TOKEN_EXPIRES_HOURS:               24,
-  OFFLINE_THRESHOLD_MINUTES:         5,   // D2: 5 min sin heartbeat → OFFLINE
-  MAX_LOG_ROWS:                      50   // D7: últimos 50 eventos
+  OFFLINE_THRESHOLD_MINUTES:         5,
+  MAX_LOG_ROWS:                      50
 };
 
 // Event types
@@ -130,6 +134,7 @@ const EV = {
   POWER_ON:                    'POWER_ON',
   POWER_OFF:                   'POWER_OFF',
   COLOR_CHANGED:               'COLOR_CHANGED',
+  BRIGHTNESS_CHANGED:          'BRIGHTNESS_CHANGED',
   SCHEDULE_UPDATED:            'SCHEDULE_UPDATED',
   WATCHDOG_RESTART:            'WATCHDOG_RESTART',
   RECOVERY_MODE_ENTERED:       'RECOVERY_MODE_ENTERED',
@@ -148,7 +153,7 @@ const HEADERS = {
             'SCHEDULE_COLOR_HEX','MANUAL_POWER_STATE','MANUAL_COLOR_HEX',
             'RECONNECT_INTERVAL_SECONDS','LAST_WIFI_ERROR','RECOVERY_MODE',
             'RECOVERY_BOOTSTRAP_EVERY_N_CYCLES','FIRMWARE_VERSION',
-            'CREATED_AT','UPDATED_AT'],
+            'CREATED_AT','UPDATED_AT','MANUAL_BRIGHTNESS','SCHEDULE_BRIGHTNESS'],
   DEVICE_WIFI_SCAN: ['SCAN_ID','MAC_ADDRESS','SSID','RSSI','SECURITY_TYPE',
                      'SCANNED_AT','IS_CURRENT'],
   DEVICE_WIFI_CREDENTIALS: ['WIFI_CONFIG_ID','MAC_ADDRESS','SSID','PASSWORD',

@@ -137,6 +137,10 @@
               <span id="ctrl-color-hex" class="color-hex">#FFFFFF</span>
             </div>
           </div>
+          <div class="field">
+            <label for="ctrl-brightness">Intensidad: <span id="ctrl-bri-val">78%</span></label>
+            <input id="ctrl-brightness" type="range" min="0" max="255" value="200" class="range-slider"/>
+          </div>
           <button id="btn-control-save" class="btn btn-primary btn-full">Guardar control</button>
         </div>
       </section>
@@ -195,6 +199,10 @@
                 <input id="sched-color" type="color" value="#ff6b00" class="color-picker"/>
                 <span id="sched-color-hex" class="color-hex">#FF6B00</span>
               </div>
+            </div>
+            <div class="field">
+              <label for="sched-brightness">Intensidad horaria: <span id="sched-bri-val">78%</span></label>
+              <input id="sched-brightness" type="range" min="0" max="255" value="200" class="range-slider"/>
             </div>
           </div>
           <div id="sched-summary" class="sched-summary hidden"></div>
