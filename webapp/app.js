@@ -192,7 +192,7 @@ function _renderDeviceDetail(dev) {
 
   $('d-mac').textContent      = dev.mac_address        || '—';
   $('d-ssid').textContent     = dev.current_wifi_ssid  || '—';
-  $('d-fw').textContent       = dev.firmware_version   || '—';
+  $('d-fw').textContent       = dev.firmware_version ? 'v' + dev.firmware_version : '—';
   $('d-lastseen').textContent = formatDate(dev.last_seen_at);
   $('d-ip').textContent       = dev.last_ip            || '—';
   $('d-wifierr').textContent  = dev.last_wifi_error    || '—';
