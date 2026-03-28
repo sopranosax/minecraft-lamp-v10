@@ -66,6 +66,78 @@ function setCell(sheet, rowNumber, colIndex, value) {
   sheet.getRange(rowNumber, colIndex).setValue(value);
 }
 
+/** Actualiza una celda forzando formato texto (para IPs, MACs, etc.) */
+function setCellText(sheet, rowNumber, colIndex, value) {
+  const cell = sheet.getRange(rowNumber, colIndex);
+  cell.setNumberFormat('@');   // Forzar tipo texto
+  cell.setValue(String(value));
+}
+
+/**
+ * Formatea una MAC address a XX:XX:XX:XX:XX:XX.
+ * Si Google Sheets la interpretó como hora (ej: "00:00:00"), o se perdieron
+ * los delimitadores, intenta reconstruirla desde los datos crudos.
+ */
+function formatMac(raw) {
+  if (!raw) return '';
+  var s = String(raw).trim();
+  // Si ya tiene formato correcto (6 grupos de 2 hex separados por ':')
+  if (/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/.test(s)) return s.toUpperCase();
+  // Quitar delimitadores y ver si queda un hex de 12 chars
+  var hex = s.replace(/[:\-\.]/g, '');
+  if (/^[0-9A-Fa-f]{12}$/.test(hex)) {
+    return hex.match(/.{2}/g).join(':').toUpperCase();
+  }
+  // Fallback: devolver tal cual
+  return s;
+}
+
+/**
+ * Formatea una IP a formato dotted-decimal estándar.
+ * Maneja el caso donde Google Sheets almacenó "192168100219" sin puntos.
+ */
+function formatIp(raw) {
+  if (!raw) return '';
+  var s = String(raw).trim();
+  // Si ya tiene puntos y parece IP válida
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(s)) return s;
+  // Si es un número largo sin puntos (9-12 dígitos), intentar reconstruir
+  // Usamos heurística: probar todas las particiones en 4 octetos válidos
+  if (/^\d{4,12}$/.test(s)) {
+    var result = _parseIpDigits(s, [], 0);
+    if (result) return result;
+  }
+  // Fallback
+  return s;
+}
+
+/**
+ * Recursivamente intenta dividir una cadena de dígitos en 4 octetos IP válidos (0-255).
+ */
+function _parseIpDigits(digits, octets, pos) {
+  if (octets.length === 4) {
+    return pos === digits.length ? octets.join('.') : null;
+  }
+  for (var len = 1; len <= 3 && pos + len <= digits.length; len++) {
+    var part = digits.substring(pos, pos + len);
+    // No permitir octetos con cero líder (excepto "0" solo)
+    if (part.length > 1 && part[0] === '0') continue;
+    var num = parseInt(part, 10);
+    if (num <= 255) {
+      var remaining = 4 - octets.length - 1;
+      var digitsLeft = digits.length - pos - len;
+      // Podar: necesitamos al menos 'remaining' dígitos y como máximo 'remaining*3'
+      if (digitsLeft >= remaining && digitsLeft <= remaining * 3) {
+        octets.push(part);
+        var result = _parseIpDigits(digits, octets, pos + len);
+        if (result) return result;
+        octets.pop();
+      }
+    }
+  }
+  return null;
+}
+
 /** Valida token y retorna userId o null */
 function validateToken(token) {
   if (!token) return null;

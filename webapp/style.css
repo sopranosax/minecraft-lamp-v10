@@ -435,6 +435,37 @@ input[type="range"].range-slider::-moz-range-thumb {
   text-shadow: 1px 1px 0 #000;
 }
 
+/* -- WiFi current connection badge --------------------------- */
+.wifi-current-bar {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .5rem .75rem; margin-bottom: .6rem;
+  background: #003300;
+  border: 3px solid;
+  border-color: #005500 #88ff88 #88ff88 #005500;
+  font-size: 13px;
+  text-shadow: 1px 1px 0 #000;
+}
+.wifi-current-label { color: var(--mc-green); }
+.wifi-current-ssid  { color: var(--mc-white); font-weight: bold; }
+
+/* -- WiFi loading state ------------------------------------- */
+.wifi-loading {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem;
+  color: var(--mc-disabled);
+  font-size: 13px;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* -- WiFi scan timestamp ------------------------------------ */
+.wifi-scan-ts {
+  padding: .35rem .75rem; margin-bottom: .4rem;
+  font-size: 11px;
+  color: var(--mc-disabled);
+  text-shadow: 1px 1px 0 #000;
+}
+.wifi-scan-ts span:last-child { color: var(--mc-aqua); }
+
 /* -- WiFi scan list ----------------------------------------- */
 .scan-list { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .6rem; }
 .scan-item {
@@ -452,10 +483,67 @@ input[type="range"].range-slider::-moz-range-thumb {
   border-color: #005500 #88ff88 #88ff88 #005500;
 }
 .scan-ssid { flex: 1; font-size: 14px; }
+.scan-auth { font-size: 14px; flex-shrink: 0; }
+.scan-auth-open { color: var(--mc-gold); }
+.scan-auth-lock { color: var(--mc-disabled); }
 .scan-rssi { font-size: 12px; color: var(--mc-disabled); white-space: nowrap; }
 .signal-bars { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
 .signal-bar  { width: 4px; background: var(--mc-border-lo); }
 .signal-bar.lit { background: var(--mc-green); }
+
+/* -- Password input row with toggle ------------------------- */
+.pass-input-row { display: flex; gap: 0; }
+.pass-input-row input {
+  flex: 1; border-right: none !important;
+}
+.pass-toggle-btn {
+  width: 44px;
+  background: var(--mc-dark);
+  border: 3px solid;
+  border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
+  border-left: 2px solid var(--mc-border-lo) !important;
+  color: var(--mc-disabled); cursor: pointer;
+  font-size: 16px;
+  transition: color var(--transition);
+  text-shadow: none;
+}
+.pass-toggle-btn:hover { color: var(--mc-white); }
+.pass-toggle-btn.active { color: var(--mc-aqua); }
+
+/* -- WiFi connection progress ------------------------------- */
+.wifi-connect-progress {
+  margin-top: .6rem;
+  padding: .75rem;
+  background: #1a1a2e;
+  border: 3px solid;
+  border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
+  text-shadow: 1px 1px 0 #000;
+}
+.progress-header {
+  display: flex; align-items: center; gap: .6rem;
+  margin-bottom: .5rem;
+  font-size: 13px; color: var(--mc-gold);
+}
+.spinner-sm { width: 18px; height: 18px; border-width: 3px; }
+.progress-bar-track {
+  height: 10px;
+  background: var(--mc-dark);
+  border: 2px solid;
+  border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
+}
+.progress-bar-fill {
+  height: 100%; width: 0%;
+  background: var(--mc-gold);
+  transition: width 0.5s linear;
+}
+.progress-bar-fill.success { background: var(--mc-green); }
+.progress-bar-fill.failed  { background: var(--mc-red); }
+.wifi-progress-result {
+  margin-top: .5rem; padding: .35rem .5rem;
+  font-size: 13px;
+}
+.wifi-progress-result.success { color: var(--mc-green); }
+.wifi-progress-result.failed  { color: var(--mc-red); }
 
 /* -- Radio options ------------------------------------------ */
 .radio-group { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .75rem; }

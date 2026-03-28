@@ -4,6 +4,7 @@
 // ============================================================
 #pragma once
 #include <HTTPClient.h>
+#include <WiFi.h>
 #include <ArduinoJson.h>
 #include "Config.h"
 #include "Storage.h"
@@ -13,9 +14,10 @@ public:
   // ─── Bootstrap: registro / heartbeat ─────────────────────
   bool bootstrap(const char* mac, const char* ip, DeviceConfig& cfg) {
     StaticJsonDocument<256> body;
-    body["mac_address"]      = mac;
-    body["firmware_version"] = FIRMWARE_VERSION;
-    body["ip"]               = ip;
+    body["mac_address"]       = mac;
+    body["firmware_version"]  = FIRMWARE_VERSION;
+    body["ip"]                = ip;
+    body["current_wifi_ssid"] = WiFi.SSID();
 
     StaticJsonDocument<1024> resp;
     if (!_post("bootstrap", body, resp)) return false;

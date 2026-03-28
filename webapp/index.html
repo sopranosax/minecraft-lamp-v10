@@ -97,22 +97,49 @@
           <h3>📡 CONFIGURAR WIFI</h3><span class="toggle-icon">▼</span>
         </div>
         <div id="wifi-body" class="card-body">
+          <!-- Current connection indicator -->
+          <div id="wifi-current" class="wifi-current-bar hidden">
+            <span class="wifi-current-label">CONECTADO A:</span>
+            <span id="wifi-current-ssid" class="wifi-current-ssid">—</span>
+          </div>
+          <!-- Loading state -->
+          <div id="wifi-loading" class="wifi-loading hidden">
+            <div class="spinner"></div><span>Cargando redes...</span>
+          </div>
           <div id="wifi-no-scan" class="info-msg hidden">Sin escaneo disponible. El dispositivo debe estar online.</div>
+          <!-- Scan timestamp -->
+          <div id="wifi-scan-ts" class="wifi-scan-ts hidden">
+            <span>📡 Escaneado:</span> <span id="wifi-scan-time">—</span>
+          </div>
           <div id="wifi-scan-list" class="scan-list"></div>
           <div id="wifi-form" class="hidden">
             <div class="field">
               <label>Red seleccionada</label>
               <div id="selected-ssid" class="selected-network">—</div>
             </div>
-            <div class="field">
+            <div id="wifi-pass-field" class="field">
               <label for="wifi-pass">🔑 CONTRASENA</label>
-              <input id="wifi-pass" type="password" placeholder="Contrasena de la red"/>
+              <div class="pass-input-row">
+                <input id="wifi-pass" type="password" placeholder="Contrasena de la red"/>
+                <button id="btn-wifi-eye" type="button" class="pass-toggle-btn" title="Mostrar/ocultar">👁</button>
+              </div>
             </div>
             <div id="wifi-status-msg" class="status-msg hidden"></div>
             <div class="btn-row">
               <button id="btn-wifi-cancel" class="btn btn-ghost">CANCELAR</button>
               <button id="btn-wifi-save" class="btn btn-primary">APLICAR</button>
             </div>
+          </div>
+          <!-- Connection progress indicator -->
+          <div id="wifi-connect-progress" class="wifi-connect-progress hidden">
+            <div class="progress-header">
+              <div class="spinner spinner-sm"></div>
+              <span id="wifi-progress-text">Esperando conexion del dispositivo...</span>
+            </div>
+            <div class="progress-bar-track">
+              <div id="wifi-progress-bar" class="progress-bar-fill"></div>
+            </div>
+            <div id="wifi-progress-result" class="wifi-progress-result hidden"></div>
           </div>
         </div>
       </section>

@@ -30,6 +30,7 @@
   15000UL // Timeout para intentar conectar a una red
 #define INITIAL_RETRY_INTERVAL_MS 10000UL // Fase A: 3 reintentos cada 10s
 #define INITIAL_RETRY_COUNT 3 // Fase A: número de reintentos rápidos
+#define RECONNECT_MAX_INTERVAL_MS 60000UL // Fase B: tope del backoff exponencial
 
 // D2: OFFLINE_THRESHOLD en backend = 5 min; el ESP32 solo hace polling y
 // heartbeat D8: recovery bootstrap cada 5 ciclos
@@ -46,7 +47,7 @@
 #define NTP_TIMEZONE "CLT3"
 
 // ─── Firmware version ─────────────────────────────────────────
-#define FIRMWARE_VERSION "1.0.0"
+#define FIRMWARE_VERSION "1.2.0"
 
 // ─── Debug serial ─────────────────────────────────────────────
 #define DEBUG_SERIAL true // false para producción

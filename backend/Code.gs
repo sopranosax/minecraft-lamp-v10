@@ -20,6 +20,7 @@ function doGet(e) {
       case 'get_device':     return handleGetDevice(mac, token);
       case 'pending_config': return handleGetPendingConfig(mac);
       case 'get_scan':       return handleGetScan(mac, token);
+      case 'get_wifi_status': return handleGetWifiStatus(mac, token);
       case 'get_logs':       return handleGetLogs(mac, token, limit);
       default:               return errorResponse('Acción desconocida: ' + action, 'UNKNOWN_ACTION');
     }

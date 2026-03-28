@@ -45,8 +45,9 @@ const API = (() => {
   // ── Dispositivos ───────────────────────────────────────────
   const getDevices = () => get({ action: 'get_devices' });
   const getDevice  = (mac) => get({ action: 'get_device', mac });
-  const getScan    = (mac) => get({ action: 'get_scan',   mac });
-  const getLogs    = (mac, limit = 50) => get({ action: 'get_logs', mac, limit });
+  const getScan       = (mac) => get({ action: 'get_scan',        mac });
+  const getWifiStatus  = (mac) => get({ action: 'get_wifi_status', mac });
+  const getLogs        = (mac, limit = 50) => get({ action: 'get_logs', mac, limit });
 
   // ── WiFi config (web app) ──────────────────────────────────
   const setWifiConfig = (mac, ssid, password) =>
@@ -73,6 +74,6 @@ const API = (() => {
       schedule_brightness: brightness
     });
 
-  return { login, logout, getDevices, getDevice, getScan, getLogs,
+  return { login, logout, getDevices, getDevice, getScan, getWifiStatus, getLogs,
            setWifiConfig, setControl, setMotionConfig, setSchedule };
 })();

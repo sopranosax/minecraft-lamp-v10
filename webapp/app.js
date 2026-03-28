@@ -157,6 +157,7 @@ async function loadDevices() {
 // ─────────────────────────────────────────────────────────────
 $('btn-back').addEventListener('click', () => {
   clearInterval(App.refreshTimer);
+  _stopWifiPoll();
   showView('view-devices');
   loadDevices();
 });
@@ -197,6 +198,14 @@ function _renderDeviceDetail(dev) {
   $('d-ip').textContent       = dev.last_ip            || '—';
   $('d-wifierr').textContent  = dev.last_wifi_error    || '—';
   $('d-offline-warn').classList.toggle('hidden', online);
+
+  // Update WiFi current connection indicator
+  if (dev.current_wifi_ssid) {
+    $('wifi-current-ssid').textContent = dev.current_wifi_ssid;
+    $('wifi-current').classList.remove('hidden');
+  } else {
+    $('wifi-current').classList.add('hidden');
+  }
 
   // ── Control manual
   $('ctrl-power').checked = cfg.manual_power_state === 'ON';
@@ -337,22 +346,47 @@ $('btn-sched-save').addEventListener('click', async () => {
 // ── Sección WiFi ───────────────────────────────────────────────
 // WiFi scan pre-loaded in openDevice()
 
+let _wifiPollTimer = null; // connection status polling timer
+
 async function loadWifiScan() {
+  $('wifi-loading').classList.remove('hidden');
   $('wifi-no-scan').classList.add('hidden');
   $('wifi-scan-list').innerHTML = '';
+  $('wifi-scan-ts').classList.add('hidden');
   $('wifi-form').classList.add('hidden');
+  $('wifi-connect-progress').classList.add('hidden');
   App.selectedSsid = null;
+
+  // Show current SSID from device data
+  const dev = App.currentDevice;
+  if (dev && dev.current_wifi_ssid) {
+    $('wifi-current-ssid').textContent = dev.current_wifi_ssid;
+    $('wifi-current').classList.remove('hidden');
+  } else {
+    $('wifi-current').classList.add('hidden');
+  }
 
   try {
     const res = await API.getScan(App.currentMac);
+    $('wifi-loading').classList.add('hidden');
+
     if (!res.success || !res.networks?.length) {
       $('wifi-no-scan').classList.remove('hidden');
       return;
     }
+
+    // Show scan timestamp from the first network entry
+    if (res.networks[0].scanned_at) {
+      $('wifi-scan-time').textContent = formatDate(res.networks[0].scanned_at);
+      $('wifi-scan-ts').classList.remove('hidden');
+    }
+
     res.networks.forEach(net => {
+      const isOpen = (net.security_type || '').toUpperCase() === 'OPEN';
       const item = document.createElement('div');
       item.className = 'scan-item';
       item.innerHTML = `
+        <span class="scan-auth ${isOpen ? 'scan-auth-open' : 'scan-auth-lock'}">${isOpen ? '🔓' : '🔒'}</span>
         <div class="scan-ssid">${net.ssid}</div>
         <div class="scan-rssi">${net.rssi} dBm</div>
         ${signalBars(net.rssi)}
@@ -361,21 +395,50 @@ async function loadWifiScan() {
         document.querySelectorAll('.scan-item').forEach(i => i.classList.remove('selected'));
         item.classList.add('selected');
         App.selectedSsid = net.ssid;
+        App._selectedIsOpen = isOpen;
         $('selected-ssid').textContent = net.ssid;
         $('wifi-pass').value = '';
         $('wifi-form').classList.remove('hidden');
         $('wifi-status-msg').classList.add('hidden');
+        $('wifi-connect-progress').classList.add('hidden');
+
+        // Hide password field for OPEN networks
+        if (isOpen) {
+          $('wifi-pass-field').classList.add('hidden');
+        } else {
+          $('wifi-pass-field').classList.remove('hidden');
+          $('wifi-pass').focus();
+        }
       });
       $('wifi-scan-list').appendChild(item);
     });
   } catch (err) {
+    $('wifi-loading').classList.add('hidden');
     toast('Error al cargar escaneo: ' + err.message, 'error');
   }
 }
 
+// ── Password visibility toggle ───────────────────────────────
+$('btn-wifi-eye').addEventListener('click', () => {
+  const passInput = $('wifi-pass');
+  const btn = $('btn-wifi-eye');
+  if (passInput.type === 'password') {
+    passInput.type = 'text';
+    btn.classList.add('active');
+    btn.textContent = '🙈';
+  } else {
+    passInput.type = 'password';
+    btn.classList.remove('active');
+    btn.textContent = '👁';
+  }
+});
+
 $('btn-wifi-cancel').addEventListener('click', () => {
   $('wifi-form').classList.add('hidden');
+  $('wifi-connect-progress').classList.add('hidden');
   App.selectedSsid = null;
+  App._selectedIsOpen = false;
+  _stopWifiPoll();
   document.querySelectorAll('.scan-item').forEach(i => i.classList.remove('selected'));
 });
 
@@ -383,21 +446,22 @@ $('btn-wifi-save').addEventListener('click', async () => {
   const btn  = $('btn-wifi-save');
   const pass = $('wifi-pass').value;
   const msg  = $('wifi-status-msg');
+  const isOpen = App._selectedIsOpen || false;
 
   if (!App.selectedSsid) { toast('⚠️ Selecciona una red', 'error'); return; }
-  if (!pass)              { toast('⚠️ Ingresa la contraseña', 'error'); return; }
+  if (!isOpen && !pass)   { toast('⚠️ Ingresa la contraseña', 'error'); return; }
 
   btn.disabled = true; btn.textContent = 'Enviando…';
   msg.className = 'status-msg pending'; msg.textContent = '⏳ Enviando credenciales al dispositivo…'; msg.classList.remove('hidden');
 
   try {
-    const res = await API.setWifiConfig(App.currentMac, App.selectedSsid, pass);
+    const res = await API.setWifiConfig(App.currentMac, App.selectedSsid, isOpen ? '' : pass);
     if (res.success) {
-      msg.className = 'status-msg pending';
-      msg.textContent = '⏳ El dispositivo intentará conectarse en los próximos 30s…';
+      msg.classList.add('hidden');
       toast('✅ Credenciales guardadas', 'success');
       $('wifi-form').classList.add('hidden');
-      await refreshDeviceDetail();
+      // Start polling for connection result
+      _startWifiPoll(App.selectedSsid);
     } else {
       msg.className = 'status-msg error';
       msg.textContent = '❌ ' + (res.error || 'Error al guardar.');
@@ -406,9 +470,86 @@ $('btn-wifi-save').addEventListener('click', async () => {
     msg.className = 'status-msg error';
     msg.textContent = '❌ Error de conexión.';
   } finally {
-    btn.disabled = false; btn.textContent = 'Aplicar';
+    btn.disabled = false; btn.textContent = 'APLICAR';
   }
 });
+
+// ── WiFi connection status polling ──────────────────────────
+function _startWifiPoll(targetSsid) {
+  _stopWifiPoll();
+  const progress = $('wifi-connect-progress');
+  const bar      = $('wifi-progress-bar');
+  const text     = $('wifi-progress-text');
+  const result   = $('wifi-progress-result');
+
+  progress.classList.remove('hidden');
+  result.classList.add('hidden');
+  bar.className = 'progress-bar-fill';
+  bar.style.width = '0%';
+  text.textContent = `⏳ Esperando que el dispositivo conecte a "${targetSsid}"...`;
+
+  const POLL_INTERVAL = 5000;  // 5 seconds
+  const MAX_DURATION  = 60000; // 60 seconds total
+  const startTime = Date.now();
+  let pollCount = 0;
+
+  _wifiPollTimer = setInterval(async () => {
+    const elapsed = Date.now() - startTime;
+    const pct = Math.min(100, (elapsed / MAX_DURATION) * 100);
+    bar.style.width = pct + '%';
+    pollCount++;
+
+    try {
+      const res = await API.getWifiStatus(App.currentMac);
+      if (res.success && res.wifi_status) {
+        const st = res.wifi_status;
+        if (st.status === 'APPLIED') {
+          // Success!
+          _stopWifiPoll();
+          bar.style.width = '100%';
+          bar.classList.add('success');
+          text.textContent = '✅ ¡Conectado exitosamente!';
+          result.textContent = `✅ Dispositivo conectado a "${st.ssid}"`;
+          result.className = 'wifi-progress-result success';
+          result.classList.remove('hidden');
+          // Refresh device detail to show new SSID
+          await refreshDeviceDetail();
+          loadWifiScan();
+          return;
+        } else if (st.status === 'FAILED') {
+          // Failed
+          _stopWifiPoll();
+          bar.style.width = '100%';
+          bar.classList.add('failed');
+          text.textContent = '❌ Fallo la conexión';
+          result.textContent = `❌ ${st.fail_reason || 'No se pudo conectar a "' + st.ssid + '"'}`;
+          result.className = 'wifi-progress-result failed';
+          result.classList.remove('hidden');
+          return;
+        }
+        // Still PENDING — keep polling
+      }
+    } catch { /* ignore poll errors, keep trying */ }
+
+    // Timeout
+    if (elapsed >= MAX_DURATION) {
+      _stopWifiPoll();
+      bar.style.width = '100%';
+      bar.classList.add('failed');
+      text.textContent = '⏰ Tiempo agotado';
+      result.textContent = '⚠️ Sin respuesta del dispositivo. Puede estar intentando conectar. El resultado aparecerá al refrescar.';
+      result.className = 'wifi-progress-result failed';
+      result.classList.remove('hidden');
+    }
+  }, POLL_INTERVAL);
+}
+
+function _stopWifiPoll() {
+  if (_wifiPollTimer) {
+    clearInterval(_wifiPollTimer);
+    _wifiPollTimer = null;
+  }
+}
 
 // ── Logs ───────────────────────────────────────────────────────
 $('btn-load-logs').addEventListener('click', async () => {

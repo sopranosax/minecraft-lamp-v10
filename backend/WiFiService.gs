@@ -78,7 +78,8 @@ function handleWifiConfig(mac, body) {
 
   const { ssid, password } = body;
   if (!ssid)     return errorResponse('ssid es requerido', 'MISSING_SSID');
-  if (!password) return errorResponse('password es requerido', 'MISSING_PASSWORD');
+  // Password can be empty for OPEN networks
+  if (password === undefined || password === null) return errorResponse('password es requerido', 'MISSING_PASSWORD');
 
   // Validar que el SSID pertenece a un escaneo vigente de este dispositivo
   const scanSheet = getSheet(SHEET_NAMES.DEVICE_WIFI_SCAN);
@@ -119,4 +120,31 @@ function handleWifiConfig(mac, body) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// ─── Obtener estado de credenciales WiFi (GET action=get_wifi_status) ──
+function handleGetWifiStatus(mac, token) {
+  const userId = validateToken(token);
+  if (!userId) return errorResponse('No autorizado', 'UNAUTHORIZED');
+  if (!mac)    return errorResponse('mac es requerido', 'MISSING_MAC');
+
+  const sheet = getSheet(SHEET_NAMES.DEVICE_WIFI_CREDS);
+  const rows  = getAllRows(sheet).filter(
+    r => String(r[COL.WIFI_CREDS.MAC_ADDRESS - 1]).toUpperCase() === mac
+  );
+
+  if (!rows.length) return successResponse({ wifi_status: null });
+
+  // Return the most recent credential entry
+  const latest = rows[rows.length - 1];
+  return successResponse({
+    wifi_status: {
+      ssid:         String(latest[COL.WIFI_CREDS.SSID         - 1]),
+      status:       String(latest[COL.WIFI_CREDS.STATUS       - 1]),
+      requested_at: String(latest[COL.WIFI_CREDS.REQUESTED_AT - 1]),
+      applied_at:   String(latest[COL.WIFI_CREDS.APPLIED_AT   - 1]),
+      failed_at:    String(latest[COL.WIFI_CREDS.FAILED_AT    - 1]),
+      fail_reason:  String(latest[COL.WIFI_CREDS.FAIL_REASON  - 1])
+    }
+  });
 }

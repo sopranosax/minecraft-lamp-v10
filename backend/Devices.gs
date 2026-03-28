@@ -20,7 +20,7 @@ function handleBootstrap(body) {
       // ─── Dispositivo nuevo: crear fila ───────────────────
       deviceId = generateId();
       isNew    = true;
-      const newRow = new Array(22).fill('');
+      const newRow = new Array(24).fill('');
       newRow[COL.DEVICES.DEVICE_ID                        - 1] = deviceId;
       newRow[COL.DEVICES.MAC_ADDRESS                      - 1] = mac;
       newRow[COL.DEVICES.DEVICE_ALIAS                     - 1] = 'Lámpara ' + mac.slice(-5);
@@ -39,6 +39,10 @@ function handleBootstrap(body) {
       newRow[COL.DEVICES.CREATED_AT                       - 1] = nowTs;
       newRow[COL.DEVICES.UPDATED_AT                       - 1] = nowTs;
       sheet.appendRow(newRow);
+      // Forzar texto en columnas MAC e IP para evitar auto-formato de Sheets
+      const newRowNum = sheet.getLastRow();
+      sheet.getRange(newRowNum, COL.DEVICES.MAC_ADDRESS).setNumberFormat('@');
+      sheet.getRange(newRowNum, COL.DEVICES.LAST_IP).setNumberFormat('@');
       addLog(mac, EV.DEVICE_REGISTERED, nowTs, '', JSON.stringify({ ip: body.ip, fw: body.firmware_version }), 'DEVICE');
     } else {
       // ─── Dispositivo existente: actualizar presencia ──────
@@ -47,8 +51,9 @@ function handleBootstrap(body) {
       setCell(sheet, found.rowNumber, COL.DEVICES.STATUS,           ST.ONLINE);
       setCell(sheet, found.rowNumber, COL.DEVICES.LAST_SEEN_AT,     nowTs);
       setCell(sheet, found.rowNumber, COL.DEVICES.UPDATED_AT,       nowTs);
-      if (body.ip)               setCell(sheet, found.rowNumber, COL.DEVICES.LAST_IP,          body.ip);
-      if (body.firmware_version) setCell(sheet, found.rowNumber, COL.DEVICES.FIRMWARE_VERSION, body.firmware_version);
+      if (body.ip)                  setCellText(sheet, found.rowNumber, COL.DEVICES.LAST_IP,          body.ip);
+      if (body.firmware_version)    setCell(sheet, found.rowNumber, COL.DEVICES.FIRMWARE_VERSION, body.firmware_version);
+      if (body.current_wifi_ssid)   setCell(sheet, found.rowNumber, COL.DEVICES.CURRENT_WIFI_SSID, body.current_wifi_ssid);
       addLog(mac, EV.DEVICE_ONLINE, nowTs, '', JSON.stringify({ ip: body.ip }), 'DEVICE');
     }
 
@@ -81,7 +86,7 @@ function handleUpdateStatus(mac, body) {
     setCell(sheet, found.rowNumber, COL.DEVICES.LAST_SEEN_AT, nowTs);
     setCell(sheet, found.rowNumber, COL.DEVICES.UPDATED_AT,   nowTs);
     if (body.current_wifi_ssid) setCell(sheet, found.rowNumber, COL.DEVICES.CURRENT_WIFI_SSID, body.current_wifi_ssid);
-    if (body.ip)                setCell(sheet, found.rowNumber, COL.DEVICES.LAST_IP, body.ip);
+    if (body.ip)                setCellText(sheet, found.rowNumber, COL.DEVICES.LAST_IP, body.ip);
 
     // Actualizar estado de credenciales WiFi si aplica
     if (status === 'WIFI_CONNECTED') {
@@ -118,7 +123,7 @@ function handleGetDevices(token) {
 
   const devices = rows.map(row => ({
     device_id:         String(row[COL.DEVICES.DEVICE_ID       - 1]),
-    mac_address:       String(row[COL.DEVICES.MAC_ADDRESS      - 1]),
+    mac_address:       formatMac(row[COL.DEVICES.MAC_ADDRESS      - 1]),
     device_alias:      String(row[COL.DEVICES.DEVICE_ALIAS     - 1]),
     status:            isDeviceOnline(String(row[COL.DEVICES.LAST_SEEN_AT - 1])) ? ST.ONLINE : ST.OFFLINE,
     current_wifi_ssid: String(row[COL.DEVICES.CURRENT_WIFI_SSID- 1]),
@@ -143,12 +148,12 @@ function handleGetDevice(mac, token) {
   return successResponse({
     device: {
       device_id:          String(row[COL.DEVICES.DEVICE_ID          - 1]),
-      mac_address:        String(row[COL.DEVICES.MAC_ADDRESS         - 1]),
+      mac_address:        formatMac(row[COL.DEVICES.MAC_ADDRESS         - 1]),
       device_alias:       String(row[COL.DEVICES.DEVICE_ALIAS        - 1]),
       status:             isDeviceOnline(String(row[COL.DEVICES.LAST_SEEN_AT-1])) ? ST.ONLINE : ST.OFFLINE,
       current_wifi_ssid:  String(row[COL.DEVICES.CURRENT_WIFI_SSID  - 1]),
       last_seen_at:       String(row[COL.DEVICES.LAST_SEEN_AT        - 1]),
-      last_ip:            String(row[COL.DEVICES.LAST_IP             - 1]),
+      last_ip:            formatIp(row[COL.DEVICES.LAST_IP             - 1]),
       firmware_version:   String(row[COL.DEVICES.FIRMWARE_VERSION    - 1]),
       last_wifi_error:    String(row[COL.DEVICES.LAST_WIFI_ERROR     - 1]),
       recovery_mode:      String(row[COL.DEVICES.RECOVERY_MODE       - 1]) === 'TRUE',
