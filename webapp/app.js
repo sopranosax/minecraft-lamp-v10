@@ -140,8 +140,18 @@ async function loadDevices() {
             &nbsp;${formatDate(dev.last_seen_at)}
           </div>
         </div>
+        <button class="btn-delete-device" title="Eliminar lámpara" data-mac="${dev.mac_address}" data-alias="${dev.device_alias || dev.mac_address}">🗑</button>
       `;
-      card.addEventListener('click', () => openDevice(dev.mac_address));
+      // Navigate to detail on card click (but not on delete button)
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-delete-device')) return;
+        openDevice(dev.mac_address);
+      });
+      // Delete button opens confirmation modal
+      card.querySelector('.btn-delete-device').addEventListener('click', (e) => {
+        e.stopPropagation();
+        _showDeleteConfirm(dev.mac_address, dev.device_alias || dev.mac_address);
+      });
       $('devices-list').appendChild(card);
     });
   } catch (err) {
@@ -149,6 +159,52 @@ async function loadDevices() {
     toast('Error al cargar dispositivos: ' + err.message, 'error');
   }
 }
+
+// ── Delete confirmation modal ──────────────────────────────────
+let _deleteTargetMac = null;
+
+function _showDeleteConfirm(mac, alias) {
+  _deleteTargetMac = mac;
+  $('delete-device-name').textContent = alias;
+  $('delete-device-mac').textContent  = mac;
+  $('delete-modal').classList.remove('hidden');
+}
+
+$('btn-delete-cancel').addEventListener('click', () => {
+  $('delete-modal').classList.add('hidden');
+  _deleteTargetMac = null;
+});
+
+// Close modal on overlay click
+$('delete-modal').addEventListener('click', (e) => {
+  if (e.target === $('delete-modal')) {
+    $('delete-modal').classList.add('hidden');
+    _deleteTargetMac = null;
+  }
+});
+
+$('btn-delete-confirm').addEventListener('click', async () => {
+  if (!_deleteTargetMac) return;
+  const btn = $('btn-delete-confirm');
+  btn.disabled = true;
+  btn.textContent = '⏳ ELIMINANDO...';
+  try {
+    const res = await API.deleteDevice(_deleteTargetMac);
+    if (res.success) {
+      toast('🗑 Lámpara eliminada correctamente', 'success');
+      $('delete-modal').classList.add('hidden');
+      _deleteTargetMac = null;
+      loadDevices();
+    } else {
+      toast('❌ ' + (res.error || 'Error al eliminar'), 'error');
+    }
+  } catch (err) {
+    toast('❌ Error de conexión: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🗑 SI, ELIMINAR';
+  }
+});
 
 // ─────────────────────────────────────────────────────────────
 // VISTA: DETALLE DEL DISPOSITIVO

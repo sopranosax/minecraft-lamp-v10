@@ -654,3 +654,153 @@ input[type="range"].range-slider::-moz-range-thumb {
   .app-header   { padding: .6rem 1.5rem; }
   .main-content { padding: 1rem 1.5rem; }
 }
+
+/* ===========================================================
+   DELETE BUTTON ON DEVICE CARDS
+   =========================================================== */
+.btn-delete-device {
+  width: 40px; height: 40px;
+  flex-shrink: 0;
+  background: var(--mc-dark);
+  border: 3px solid;
+  border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
+  color: var(--mc-red);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
+  text-shadow: 1px 1px 0 #000;
+}
+.btn-delete-device:hover {
+  background: #330000;
+  box-shadow: 0 0 12px rgba(255,85,85,0.5);
+  transform: scale(1.1);
+}
+.btn-delete-device:active {
+  border-color: var(--mc-border-hi) var(--mc-border-lo) var(--mc-border-lo) var(--mc-border-hi);
+  transform: scale(0.95);
+}
+
+/* ===========================================================
+   DANGER BUTTON
+   =========================================================== */
+.btn-danger {
+  background: #881111;
+  color: var(--mc-red);
+  border: 3px solid;
+  border-color: #ff6666 #440000 #440000 #ff6666;
+  text-shadow: 2px 2px 0 #000;
+  letter-spacing: .05em;
+}
+.btn-danger:hover {
+  background: #aa2222;
+  box-shadow: 0 0 16px rgba(255,85,85,0.5);
+}
+.btn-danger:active {
+  background: #660000;
+  border-color: #440000 #ff6666 #ff6666 #440000;
+}
+.btn-danger:disabled {
+  opacity: .5; cursor: not-allowed;
+  background: #441111;
+  box-shadow: none;
+}
+
+/* ===========================================================
+   DELETE CONFIRMATION MODAL
+   =========================================================== */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.82);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  animation: modal-fade-in 0.15s ease;
+}
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal-card {
+  width: 100%; max-width: 420px;
+  background: var(--mc-panel);
+  border: 4px solid;
+  border-color: var(--mc-border-hi) var(--mc-border-lo) var(--mc-border-lo) var(--mc-border-hi);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.8), 0 0 30px rgba(255,85,85,0.15);
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  animation: modal-card-in 0.2s ease;
+}
+@keyframes modal-card-in {
+  from { transform: scale(0.92) translateY(10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: .5rem;
+  filter: drop-shadow(0 0 12px rgba(255,170,0,0.7));
+  animation: modal-icon-pulse 1.5s ease-in-out infinite;
+}
+@keyframes modal-icon-pulse {
+  0%,100% { transform: scale(1);    filter: drop-shadow(0 0 12px rgba(255,170,0,0.7)); }
+  50%     { transform: scale(1.08); filter: drop-shadow(0 0 20px rgba(255,85,85,0.9)); }
+}
+.modal-title {
+  font-size: 16px;
+  color: var(--mc-dark);
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+  margin-bottom: .75rem;
+  letter-spacing: 1px;
+}
+.modal-warn-banner {
+  padding: .5rem .75rem;
+  background: #330000;
+  border: 3px solid;
+  border-color: #550000 #ff8888 #ff8888 #550000;
+  font-size: 13px;
+  color: var(--mc-red);
+  text-shadow: 1px 1px 0 #000;
+  margin-bottom: .85rem;
+  font-weight: bold;
+  animation: warn-glow 2s ease-in-out infinite;
+}
+@keyframes warn-glow {
+  0%,100% { box-shadow: 0 0 6px rgba(255,85,85,0.3); }
+  50%     { box-shadow: 0 0 16px rgba(255,85,85,0.6); }
+}
+.modal-message {
+  font-size: 13px;
+  color: var(--mc-dark);
+  line-height: 1.8;
+  margin-bottom: .75rem;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.15);
+}
+.modal-final-warn {
+  color: var(--mc-red);
+  font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.15);
+  background: #ffeeee;
+  padding: .4rem .6rem;
+  border: 2px solid #ffaaaa;
+}
+.modal-device-info {
+  padding: .6rem .75rem;
+  background: var(--mc-dark);
+  border: 3px solid;
+  border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
+  margin-bottom: .85rem;
+}
+.modal-device-name {
+  font-size: 14px;
+  color: var(--mc-gold);
+  text-shadow: 1px 1px 0 #000;
+  margin-bottom: .2rem;
+}
+.modal-device-mac {
+  font-size: 12px;
+  color: var(--mc-disabled);
+  text-shadow: 1px 1px 0 #000;
+}
+.modal-actions {
+  margin-top: .5rem;
+  gap: .5rem;
+}

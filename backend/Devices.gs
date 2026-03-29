@@ -220,3 +220,50 @@ function _updateWifiCredStatus(mac, status, failReason) {
     }
   }
 }
+
+// ─── Delete device (POST action=delete_device) ───────────────
+function handleDeleteDevice(mac, body) {
+  const token = body.token || '';
+  const userId = validateToken(token);
+  if (!userId) return errorResponse('No autorizado', 'UNAUTHORIZED');
+  if (!mac)    return errorResponse('mac es requerido', 'MISSING_MAC');
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    // 1) Find and delete from DEVICES sheet
+    const devSheet = getSheet(SHEET_NAMES.DEVICES);
+    const found = findRowByCol(devSheet, COL.DEVICES.MAC_ADDRESS, mac);
+    if (!found) return errorResponse('Dispositivo no encontrado', 'NOT_FOUND');
+
+    const alias = String(found.rowData[COL.DEVICES.DEVICE_ALIAS - 1]);
+    devSheet.deleteRow(found.rowNumber);
+
+    // 2) Clean up WiFi credentials for this MAC
+    try {
+      const wifiSheet = getSheet(SHEET_NAMES.DEVICE_WIFI_CREDS);
+      const wifiRows  = getAllRows(wifiSheet);
+      // Delete in reverse to preserve row indices
+      for (let i = wifiRows.length - 1; i >= 0; i--) {
+        if (String(wifiRows[i][COL.WIFI_CREDS.MAC_ADDRESS - 1]).toUpperCase() === mac) {
+          wifiSheet.deleteRow(i + 2); // +2: 1-based + header
+        }
+      }
+    } catch (_) { /* WiFi creds cleanup is best-effort */ }
+
+    // 3) Clean up logs for this MAC
+    try {
+      const logSheet = getSheet(SHEET_NAMES.DEVICE_LOG);
+      const logRows  = getAllRows(logSheet);
+      for (let i = logRows.length - 1; i >= 0; i--) {
+        if (String(logRows[i][COL.LOG.MAC_ADDRESS - 1]).toUpperCase() === mac) {
+          logSheet.deleteRow(i + 2);
+        }
+      }
+    } catch (_) { /* Log cleanup is best-effort */ }
+
+    return successResponse({ deleted: true, mac: mac, alias: alias });
+  } finally {
+    lock.releaseLock();
+  }
+}

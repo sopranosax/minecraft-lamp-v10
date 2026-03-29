@@ -63,6 +63,9 @@ function doPost(e) {
       case 'motion_config':  return handleMotionConfig(mac, body);
       case 'schedule':       return handleSchedule(mac, body);
 
+      // Web App — device management
+      case 'delete_device':  return handleDeleteDevice(mac, body);
+
       default:               return errorResponse('Acción desconocida: ' + action, 'UNKNOWN_ACTION');
     }
   } catch (err) {

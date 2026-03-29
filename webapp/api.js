@@ -74,6 +74,10 @@ const API = (() => {
       schedule_brightness: brightness
     });
 
+  // ── Eliminar dispositivo ─────────────────────────────────────
+  const deleteDevice = (mac) =>
+    post('delete_device', { mac });
+
   return { login, logout, getDevices, getDevice, getScan, getWifiStatus, getLogs,
-           setWifiConfig, setControl, setMotionConfig, setSchedule };
+           setWifiConfig, setControl, setMotionConfig, setSchedule, deleteDevice };
 })();

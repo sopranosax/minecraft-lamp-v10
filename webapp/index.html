@@ -62,6 +62,31 @@
     </main>
   </div>
 
+  <!-- Modal: Confirmar eliminación -->
+  <div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-icon">⚠</div>
+      <h3 class="modal-title">ELIMINAR LAMPARA</h3>
+      <div class="modal-warn-banner">
+        ☠ ACCION CRITICA E IRREVERSIBLE
+      </div>
+      <p class="modal-message">
+        Estas a punto de eliminar permanentemente esta lampara del sistema. Se borraran todos sus datos, credenciales WiFi y registros de eventos.
+      </p>
+      <div class="modal-device-info">
+        <div class="modal-device-name" id="delete-device-name">—</div>
+        <div class="modal-device-mac" id="delete-device-mac">—</div>
+      </div>
+      <p class="modal-message modal-final-warn">
+        Esta accion NO se puede deshacer.
+      </p>
+      <div class="btn-row modal-actions">
+        <button id="btn-delete-cancel" class="btn btn-ghost">◀ CANCELAR</button>
+        <button id="btn-delete-confirm" class="btn btn-danger">🗑 SI, ELIMINAR</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Vista: Detalle dispositivo -->
   <div id="view-detail" class="view">
     <header class="app-header">
