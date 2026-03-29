@@ -36,6 +36,9 @@ int     reconnectFailCount     = 0;
 unsigned long lastPollingMs    = 0;
 unsigned long lastReconnectMs  = 0;
 unsigned long loopCount        = 0;
+unsigned long pollCount        = 0;  // para re-escaneo periódico
+
+#define WIFI_RESCAN_EVERY_N_POLLS 10  // Re-escanear cada 10 polls (~5 min)
 
 // ─── Helper: print a divider line ─────────────────────────────
 void _printDivider(const char* label = nullptr) {
@@ -152,6 +155,10 @@ void setup() {
     DBGLN("  Enviando bootstrap al backend...");
     bool bsOk = backend.bootstrap(macAddress.c_str(), wifi.localIP().c_str(), cfg);
     DBGF("  Backend     : %s\n", bsOk ? "OK ✓" : "FALLO ✗");
+
+    // Escanear redes disponibles (se puede hacer estando conectado)
+    DBGLN("  Escaneando redes WiFi cercanas...");
+    _scanAndPublishNetworks();
 
     if (WatchDog::wasWatchdogRestart()) {
       DBGLN("  Reportando reinicio WDT al backend...");
@@ -322,7 +329,8 @@ void _checkPendingWifi() {
 
 // ─── Polling periódico al backend (D1: cada 30s) ─────────────
 void _pollBackend() {
-  DBGF("[POLL] Consultando backend... (loop #%lu, uptime %lus)\n", loopCount, millis() / 1000);
+  pollCount++;
+  DBGF("[POLL] #%lu — Consultando backend... (uptime %lus)\n", pollCount, millis() / 1000);
 
   char pendSsid[64] = {0};
   char pendPass[64] = {0};
@@ -344,6 +352,12 @@ void _pollBackend() {
   if (hasPending && strlen(pendSsid) > 0) {
     DBGF("[POLL] ¡Credenciales WiFi pendientes! SSID: \"%s\"\n", pendSsid);
     _checkPendingWifi();
+  }
+
+  // Re-escanear redes periódicamente (~cada 5 min)
+  if (pollCount % WIFI_RESCAN_EVERY_N_POLLS == 0) {
+    DBGF("[POLL] Re-escaneo WiFi periódico (cada %d polls)\n", WIFI_RESCAN_EVERY_N_POLLS);
+    _scanAndPublishNetworks();
   }
 }
 
