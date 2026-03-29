@@ -26,7 +26,6 @@ public:
       JsonObject config = resp["config"];
       _applyJsonConfig(cfg, config);
       Storage::save(cfg);
-      DBGLN("[BE] Bootstrap OK.");
       return true;
     }
     return false;
@@ -106,21 +105,23 @@ private:
 
     String bodyStr;
     serializeJson(body, bodyStr);
-    DBGF("[BE] POST %s: %s\n", action, bodyStr.c_str());
 
     int code = http.POST(bodyStr);
     if (code < 0) {
-      DBGF("[BE] HTTP error: %d\n", code);
+      DBGF("    [HTTP] POST %s FALLO cod=%d\n", action, code);
       http.end();
       return false;
     }
 
     String payload = http.getString();
     http.end();
-    DBGF("[BE] Resp: %s\n", payload.c_str());
 
     DeserializationError err = deserializeJson(respDoc, payload);
-    return err == DeserializationError::Ok;
+    if (err != DeserializationError::Ok) {
+      DBGF("    [HTTP] POST %s JSON parse error\n", action);
+      return false;
+    }
+    return true;
   }
 
   // GET a URL completa → parsea respuesta en `respDoc`
@@ -128,21 +129,23 @@ private:
     HTTPClient http;
     http.begin(url);
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-    DBGF("[BE] GET %s\n", url.c_str());
 
     int code = http.GET();
     if (code < 0) {
-      DBGF("[BE] HTTP error: %d\n", code);
+      DBGF("    [HTTP] GET FALLO cod=%d\n", code);
       http.end();
       return false;
     }
 
     String payload = http.getString();
     http.end();
-    DBGF("[BE] Resp: %s\n", payload.c_str());
 
     DeserializationError err = deserializeJson(respDoc, payload);
-    return err == DeserializationError::Ok;
+    if (err != DeserializationError::Ok) {
+      DBGLN("    [HTTP] GET JSON parse error");
+      return false;
+    }
+    return true;
   }
 
   void _applyJsonConfig(DeviceConfig& cfg, JsonObject& obj) {

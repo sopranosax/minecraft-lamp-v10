@@ -1,6 +1,6 @@
 // ============================================================
-// WiFiManager.h — Gestión de WiFi con estrategia escalonada 3 fases
-// IoT Lámpara WiFi v10
+// WiFiManager.h — Gestion de WiFi con estrategia escalonada 3 fases
+// IoT Lampara WiFi v10
 // ============================================================
 #pragma once
 #include <WiFi.h>
@@ -31,15 +31,11 @@ public:
     return String(buf);
   }
 
-  // ─── Conectar a red bootstrap ─────────────────────────────
   bool connectBootstrap() {
-    DBGF("[WiFi] Conectando a bootstrap: %s\n", BOOTSTRAP_SSID);
     return _connect(BOOTSTRAP_SSID, BOOTSTRAP_PASSWORD, WiFiState::BOOTSTRAP_CONNECTED);
   }
 
-  // ─── Conectar a red operativa ─────────────────────────────
   bool connectOperational(const char* ssid, const char* password) {
-    DBGF("[WiFi] Conectando a red operativa: %s\n", ssid);
     return _connect(ssid, password, WiFiState::OPERATIONAL_CONNECTED);
   }
 
@@ -50,60 +46,42 @@ public:
   void disconnect() { WiFi.disconnect(true); state = WiFiState::DISCONNECTED; }
 
   /**
-   * Estrategia de reconexión escalonada 3 fases (DER-04 §8.3).
-   *
-   * Fase A: Fast retries   → 3 reintentos rápidos cada 10s (atrapa parpadeos de red)
-   * Fase B: Exp. backoff   → Intervalos crecientes 10s→20s→40s→60s (cap) a red operativa
-   * Fase C: Bootstrap      → Cada N fallos, reconectar a bootstrap para re-escanear/obtener creds
-   *
-   * @param opSSID       Última red operativa conocida
-   * @param opPass       Password de red operativa
-   * @param failCount    Contador de fallos acumulados (manejado externamente)
-   * @param every_n      Valor de RECOVERY_BOOTSTRAP_EVERY_N_CYCLES
-   * @returns true si logró reconectarse (a cualquier red)
+   * Estrategia de reconexion escalonada 3 fases:
+   *   Fase A: 3 reintentos rapidos cada 10s
+   *   Fase B: Backoff exponencial 10s-60s a red operativa
+   *   Fase C: Cada N fallos, reconectar a bootstrap
    */
   bool attemptRecovery(const char* opSSID, const char* opPass, int& failCount, int every_n) {
     if (strlen(opSSID) == 0) {
-      // Sin red operativa → ir directo a bootstrap
-      DBGLN("[WiFi] Sin red operativa → bootstrap");
       return connectBootstrap();
     }
 
-    // ── Fase A: Fast retries (solo en los primeros intentos)
+    // Fase A: Fast retries (solo cuando failCount==0)
     if (failCount == 0) {
-      DBGLN("[WiFi] Fase A: Reintentos rápidos");
       for (int i = 0; i < INITIAL_RETRY_COUNT; i++) {
-        DBGF("[WiFi]   Reintento rápido %d/%d a \"%s\"\n", i + 1, INITIAL_RETRY_COUNT, opSSID);
         if (_connect(opSSID, opPass, WiFiState::OPERATIONAL_CONNECTED)) {
-          DBGLN("[WiFi] Fase A: Reconexión exitosa ✓");
           failCount = 0;
           return true;
         }
         if (i < INITIAL_RETRY_COUNT - 1) delay(INITIAL_RETRY_INTERVAL_MS);
       }
       failCount = INITIAL_RETRY_COUNT;
-      DBGF("[WiFi] Fase A agotada (%d intentos). Pasando a Fase B.\n", INITIAL_RETRY_COUNT);
     }
 
-    // ── Fase B: Intentar red operativa con backoff exponencial
-    DBGF("[WiFi] Fase B: Intento a \"%s\" (fallo #%d)\n", opSSID, failCount + 1);
+    // Fase B: Intento con backoff exponencial
     if (_connect(opSSID, opPass, WiFiState::OPERATIONAL_CONNECTED)) {
       failCount = 0;
-      DBGLN("[WiFi] Fase B: Reconexión operativa exitosa ✓");
       return true;
     }
 
     failCount++;
-    DBGF("[WiFi] Fase B: Fallo #%d\n", failCount);
 
-    // ── Fase C: Cada N fallos → bootstrap para diagnóstico y re-escaneo
+    // Fase C: Cada N fallos -> bootstrap
     if (failCount % every_n == 0) {
-      DBGF("[WiFi] Fase C: Bootstrap de recuperación (cada %d fallos)\n", every_n);
       if (connectBootstrap()) {
         state = WiFiState::RECOVERY_MODE;
-        return true; // conectado a bootstrap en modo recuperación
+        return true;
       }
-      DBGLN("[WiFi] Fase C: Bootstrap también falló ✗");
     }
 
     state = WiFiState::RECOVERY_MODE;
@@ -111,11 +89,9 @@ public:
   }
 
   /**
-   * Calcula el intervalo de backoff exponencial para reconexión.
-   * 10s → 20s → 40s → 60s (cap = RECONNECT_MAX_INTERVAL_MS)
+   * Calcula intervalo de backoff exponencial: 10s -> 20s -> 40s -> 60s (cap)
    */
   static unsigned long getBackoffInterval(int failCount) {
-    // Base: 10s, doubles each failure, capped at max
     unsigned long interval = INITIAL_RETRY_INTERVAL_MS;
     for (int i = 1; i < failCount && interval < RECONNECT_MAX_INTERVAL_MS; i++) {
       interval *= 2;
@@ -136,11 +112,9 @@ private:
 
     if (WiFi.status() == WL_CONNECTED) {
       state = onSuccess;
-      DBGF("[WiFi] Conectado a %s IP: %s\n", ssid, WiFi.localIP().toString().c_str());
       return true;
     }
 
-    DBGF("[WiFi] Fallo al conectar a %s\n", ssid);
     state = WiFiState::DISCONNECTED;
     return false;
   }
