@@ -68,8 +68,6 @@ document.querySelectorAll('.card-header[data-toggle]').forEach(header => {
     body.classList.toggle('collapsed', isOpen);
     header.classList.toggle('open', !isOpen);
   });
-  // Abrir por defecto excepto logs
-  if (bodyId !== 'logs-body') header.classList.add('open');
 });
 
 // ─────────────────────────────────────────────────────────────
