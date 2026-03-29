@@ -369,49 +369,19 @@ input[type="range"].range-slider::-moz-range-thumb {
   image-rendering: pixelated;
   position: relative;
   margin-top: 2px;
-  /* 6x6 pixel grid = redstone lamp block */
-  background:
-    /* outer border - dark */
-    linear-gradient(#4a3526, #4a3526) 0 0 / 100% 6px,
-    linear-gradient(#4a3526, #4a3526) 0 30px / 100% 6px,
-    linear-gradient(#4a3526, #4a3526) 0 0 / 6px 100%,
-    linear-gradient(#4a3526, #4a3526) 30px 0 / 6px 100%,
-    /* inner cross pattern */
-    linear-gradient(#6b4d35, #6b4d35) 6px 6px / 6px 24px,
-    linear-gradient(#6b4d35, #6b4d35) 6px 6px / 24px 6px,
-    linear-gradient(#6b4d35, #6b4d35) 24px 6px / 6px 24px,
-    linear-gradient(#6b4d35, #6b4d35) 6px 24px / 24px 6px,
-    /* center glow panel */
-    linear-gradient(#553322, #553322) 12px 12px / 12px 12px,
-    /* background fill */
-    #3d2a1a;
+  background-image: url('mc-lamp-off-icon.png');
+  background-size: cover;
   background-repeat: no-repeat;
-  border: 2px solid;
-  border-color: #6b4d35 #2a1a0e #2a1a0e #6b4d35;
+  border: none;
+  transition: filter 0.15s ease;
 }
 .mc-lamp.on {
-  /* Glowing redstone lamp */
-  background:
-    /* outer border */
-    linear-gradient(#8b6b47, #8b6b47) 0 0 / 100% 6px,
-    linear-gradient(#8b6b47, #8b6b47) 0 30px / 100% 6px,
-    linear-gradient(#8b6b47, #8b6b47) 0 0 / 6px 100%,
-    linear-gradient(#8b6b47, #8b6b47) 30px 0 / 6px 100%,
-    /* inner cross */
-    linear-gradient(#cc8844, #cc8844) 6px 6px / 6px 24px,
-    linear-gradient(#cc8844, #cc8844) 6px 6px / 24px 6px,
-    linear-gradient(#cc8844, #cc8844) 24px 6px / 6px 24px,
-    linear-gradient(#cc8844, #cc8844) 6px 24px / 24px 6px,
-    /* center bright glow */
-    linear-gradient(#ffcc66, #ffcc66) 12px 12px / 12px 12px,
-    /* base */
-    #aa7733;
-  background-repeat: no-repeat;
-  border-color: #cc8844 #5a3a1e #5a3a1e #cc8844;
+  background-image: url('mc-lamp-icon.png');
   box-shadow: 0 0 12px rgba(255,204,102,0.6), 0 0 24px rgba(255,170,0,0.3);
 }
 .mc-lamp.off {
-  opacity: .65;
+  background-image: url('mc-lamp-off-icon.png');
+  opacity: .75;
 }
 
 .device-info { flex: 1; min-width: 0; }
@@ -708,7 +678,7 @@ input[type="range"].range-slider::-moz-range-thumb {
 }
 
 /* ===========================================================
-   DELETE BUTTON - Minecraft TNT Block
+   DELETE BUTTON - Minecraft Trash Can (Trash Slot style)
    =========================================================== */
 .btn-delete-device {
   width: 34px; height: 34px;
@@ -717,38 +687,23 @@ input[type="range"].range-slider::-moz-range-thumb {
   transition: box-shadow 0.12s ease, transform 0.08s ease;
   margin-top: 2px;
   padding: 0;
+  border: none;
+  background: transparent;
 }
 .mc-tnt {
   image-rendering: pixelated;
-  position: relative;
-  /* TNT block: red with dark cross and white fuse */
-  background:
-    /* top/bottom border */
-    linear-gradient(#8b2020, #8b2020) 0 0 / 100% 5px,
-    linear-gradient(#8b2020, #8b2020) 0 29px / 100% 5px,
-    /* left/right border */
-    linear-gradient(#8b2020, #8b2020) 0 0 / 5px 100%,
-    linear-gradient(#8b2020, #8b2020) 29px 0 / 5px 100%,
-    /* center horizontal band (TNT label) */
-    linear-gradient(#ddddcc, #ddddcc) 5px 10px / 24px 14px,
-    /* "T N T" letters as dark pixels */
-    linear-gradient(#442222, #442222) 8px 13px / 8px 2px,
-    linear-gradient(#442222, #442222) 11px 13px / 2px 8px,
-    linear-gradient(#442222, #442222) 20px 13px / 8px 2px,
-    linear-gradient(#442222, #442222) 23px 13px / 2px 8px,
-    /* red fill */
-    #cc3333;
+  background-image: url('mc-trash-icon.png');
+  background-size: cover;
   background-repeat: no-repeat;
-  border: 2px solid;
-  border-color: #ee5555 #661111 #661111 #ee5555;
 }
 .btn-delete-device:hover {
-  box-shadow: 0 0 14px rgba(255,50,50,0.6);
-  transform: scale(1.1);
+  box-shadow: 0 0 14px rgba(255,50,50,0.5);
+  transform: scale(1.12);
+  filter: brightness(1.2) drop-shadow(0 0 4px rgba(255,85,85,0.4));
 }
 .btn-delete-device:active {
-  border-color: #661111 #ee5555 #ee5555 #661111;
-  transform: scale(0.95);
+  transform: scale(0.92);
+  filter: brightness(0.85);
 }
 
 /* ===========================================================
