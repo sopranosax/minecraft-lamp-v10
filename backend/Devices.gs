@@ -20,7 +20,7 @@ function handleBootstrap(body) {
       // ─── Dispositivo nuevo: crear fila ───────────────────
       deviceId = generateId();
       isNew    = true;
-      const newRow = new Array(24).fill('');
+      const newRow = new Array(25).fill('');
       newRow[COL.DEVICES.DEVICE_ID                        - 1] = deviceId;
       newRow[COL.DEVICES.MAC_ADDRESS                      - 1] = mac;
       newRow[COL.DEVICES.DEVICE_ALIAS                     - 1] = 'Lámpara ' + mac.slice(-5);
@@ -145,6 +145,13 @@ function handleGetDevice(mac, token) {
   if (!found)  return errorResponse('Dispositivo no encontrado', 'NOT_FOUND');
 
   const row = found.rowData;
+  // Parse WiFi scan JSON from DEVICES table
+  let wifiScan = [];
+  try {
+    const scanJson = String(row[COL.DEVICES.WIFI_SCAN_JSON - 1] || '');
+    if (scanJson) wifiScan = JSON.parse(scanJson);
+  } catch (_) { /* invalid JSON, return empty */ }
+
   return successResponse({
     device: {
       device_id:          String(row[COL.DEVICES.DEVICE_ID          - 1]),
@@ -157,6 +164,7 @@ function handleGetDevice(mac, token) {
       firmware_version:   String(row[COL.DEVICES.FIRMWARE_VERSION    - 1]),
       last_wifi_error:    String(row[COL.DEVICES.LAST_WIFI_ERROR     - 1]),
       recovery_mode:      String(row[COL.DEVICES.RECOVERY_MODE       - 1]) === 'TRUE',
+      wifi_scan:          wifiScan,
       config:             buildDeviceConfig(row)
     }
   });

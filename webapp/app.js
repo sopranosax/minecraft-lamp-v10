@@ -344,78 +344,79 @@ $('btn-sched-save').addEventListener('click', async () => {
 });
 
 // ── Sección WiFi ───────────────────────────────────────────────
-// WiFi scan pre-loaded in openDevice()
-
 let _wifiPollTimer = null; // connection status polling timer
 
-async function loadWifiScan() {
-  $('wifi-loading').classList.remove('hidden');
+// Renders WiFi scan data from the device detail (no separate API call needed).
+// Called after refreshDeviceDetail() which populates App.currentDevice.wifi_scan.
+function loadWifiScan() {
   $('wifi-no-scan').classList.add('hidden');
   $('wifi-scan-list').innerHTML = '';
   $('wifi-scan-ts').classList.add('hidden');
   $('wifi-form').classList.add('hidden');
   $('wifi-connect-progress').classList.add('hidden');
+  $('wifi-loading').classList.add('hidden');
   App.selectedSsid = null;
 
-  // Show current SSID from device data
   const dev = App.currentDevice;
-  if (dev && dev.current_wifi_ssid) {
+  if (!dev) return;
+
+  // Show current SSID
+  if (dev.current_wifi_ssid) {
     $('wifi-current-ssid').textContent = dev.current_wifi_ssid;
     $('wifi-current').classList.remove('hidden');
   } else {
     $('wifi-current').classList.add('hidden');
   }
 
-  try {
-    const res = await API.getScan(App.currentMac);
-    $('wifi-loading').classList.add('hidden');
-
-    if (!res.success || !res.networks?.length) {
-      $('wifi-no-scan').classList.remove('hidden');
-      return;
-    }
-
-    // Show scan timestamp from the first network entry
-    if (res.networks[0].scanned_at) {
-      $('wifi-scan-time').textContent = formatDate(res.networks[0].scanned_at);
-      $('wifi-scan-ts').classList.remove('hidden');
-    }
-
-    res.networks.forEach(net => {
-      const isOpen = (net.security_type || '').toUpperCase() === 'OPEN';
-      const item = document.createElement('div');
-      item.className = 'scan-item';
-      item.innerHTML = `
-        <span class="scan-auth ${isOpen ? 'scan-auth-open' : 'scan-auth-lock'}">${isOpen ? '🔓' : '🔒'}</span>
-        <div class="scan-ssid">${net.ssid}</div>
-        <div class="scan-rssi">${net.rssi} dBm</div>
-        ${signalBars(net.rssi)}
-      `;
-      item.addEventListener('click', () => {
-        document.querySelectorAll('.scan-item').forEach(i => i.classList.remove('selected'));
-        item.classList.add('selected');
-        App.selectedSsid = net.ssid;
-        App._selectedIsOpen = isOpen;
-        $('selected-ssid').textContent = net.ssid;
-        $('wifi-pass').value = '';
-        $('wifi-form').classList.remove('hidden');
-        $('wifi-status-msg').classList.add('hidden');
-        $('wifi-connect-progress').classList.add('hidden');
-
-        // Hide password field for OPEN networks
-        if (isOpen) {
-          $('wifi-pass-field').classList.add('hidden');
-        } else {
-          $('wifi-pass-field').classList.remove('hidden');
-          $('wifi-pass').focus();
-        }
-      });
-      $('wifi-scan-list').appendChild(item);
-    });
-  } catch (err) {
-    $('wifi-loading').classList.add('hidden');
-    toast('Error al cargar escaneo: ' + err.message, 'error');
+  // Read scan from device detail
+  const networks = dev.wifi_scan || [];
+  if (!networks.length) {
+    $('wifi-no-scan').classList.remove('hidden');
+    return;
   }
+
+  // Show scan timestamp from the first entry
+  const ts = networks[0].ts || networks[0].scanned_at;
+  if (ts) {
+    $('wifi-scan-time').textContent = formatDate(ts);
+    $('wifi-scan-ts').classList.remove('hidden');
+  }
+
+  // Sort by signal strength descending
+  const sorted = [...networks].sort((a, b) => (b.rssi || 0) - (a.rssi || 0));
+
+  sorted.forEach(net => {
+    const authType = (net.auth || net.security_type || '').toUpperCase();
+    const isOpen = authType === 'OPEN';
+    const item = document.createElement('div');
+    item.className = 'scan-item';
+    item.innerHTML = `
+      <span class="scan-auth ${isOpen ? 'scan-auth-open' : 'scan-auth-lock'}">${isOpen ? '🔓' : '🔒'}</span>
+      <div class="scan-ssid">${net.ssid}</div>
+      <div class="scan-rssi">${net.rssi} dBm</div>
+      ${signalBars(net.rssi)}
+    `;
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.scan-item').forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+      App.selectedSsid = net.ssid;
+      App._selectedIsOpen = isOpen;
+      $('selected-ssid').textContent = net.ssid;
+      $('wifi-pass').value = '';
+      $('wifi-form').classList.remove('hidden');
+      $('wifi-status-msg').classList.add('hidden');
+      $('wifi-connect-progress').classList.add('hidden');
+
+      // Hide password field for OPEN networks
+      if (isOpen) {
+        $('wifi-pass-field').classList.add('hidden');
+      } else {
+        $('wifi-pass-field').classList.remove('hidden');
+        $('wifi-pass').focus();
+      }
+    });
+    $('wifi-scan-list').appendChild(item);
+  });
 }
 
 // ── Password visibility toggle ───────────────────────────────

@@ -48,7 +48,8 @@ const COL = {
     CREATED_AT:                       21,
     UPDATED_AT:                       22,
     MANUAL_BRIGHTNESS:                23,  // 0-255
-    SCHEDULE_BRIGHTNESS:              24   // 0-255
+    SCHEDULE_BRIGHTNESS:              24,  // 0-255
+    WIFI_SCAN_JSON:                   25   // JSON array: [{ssid,rssi,auth},...]
   },
   WIFI_SCAN: {
     SCAN_ID:       1,
@@ -153,7 +154,8 @@ const HEADERS = {
             'SCHEDULE_COLOR_HEX','MANUAL_POWER_STATE','MANUAL_COLOR_HEX',
             'RECONNECT_INTERVAL_SECONDS','LAST_WIFI_ERROR','RECOVERY_MODE',
             'RECOVERY_BOOTSTRAP_EVERY_N_CYCLES','FIRMWARE_VERSION',
-            'CREATED_AT','UPDATED_AT','MANUAL_BRIGHTNESS','SCHEDULE_BRIGHTNESS'],
+            'CREATED_AT','UPDATED_AT','MANUAL_BRIGHTNESS','SCHEDULE_BRIGHTNESS',
+            'WIFI_SCAN_JSON'],
   DEVICE_WIFI_SCAN: ['SCAN_ID','MAC_ADDRESS','SSID','RSSI','SECURITY_TYPE',
                      'SCANNED_AT','IS_CURRENT'],
   DEVICE_WIFI_CREDENTIALS: ['WIFI_CONFIG_ID','MAC_ADDRESS','SSID','PASSWORD',

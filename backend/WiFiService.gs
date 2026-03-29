@@ -1,73 +1,75 @@
 // ============================================================
 // WiFiService.gs — Escaneo y configuración WiFi
 // IoT Lámpara WiFi v10
+//
+// Scan data is stored as JSON in DEVICES.WIFI_SCAN_JSON column
+// (no separate scan table needed).
 // ============================================================
 
 // ─── Recibir escaneo del ESP32 (POST action=wifi_scan) ───────
+// Stores the scan JSON directly in the DEVICES row.
 function handleWifiScan(mac, body) {
   if (!mac) return errorResponse('mac es requerido', 'MISSING_MAC');
 
-  const { scan_ts, networks } = body;
+  const { networks } = body;
   if (!networks || !networks.length)
     return errorResponse('networks es requerido y no puede estar vacío', 'MISSING_NETWORKS');
 
   const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
+  lock.waitLock(10000);
   try {
-    const sheet = getSheet(SHEET_NAMES.DEVICE_WIFI_SCAN);
-    const nowTs = scan_ts || nowIso();
+    const sheet = getSheet(SHEET_NAMES.DEVICES);
+    const found = findRowByCol(sheet, COL.DEVICES.MAC_ADDRESS, mac);
+    if (!found) return errorResponse('Dispositivo no encontrado', 'NOT_FOUND');
 
-    // Demarcar escaneos anteriores como no vigentes
-    const allRows = getAllRows(sheet);
-    allRows.forEach((row, i) => {
-      if (String(row[COL.WIFI_SCAN.MAC_ADDRESS - 1]).toUpperCase() === mac &&
-          String(row[COL.WIFI_SCAN.IS_CURRENT  - 1]) === 'TRUE') {
-        setCell(sheet, i + 2, COL.WIFI_SCAN.IS_CURRENT, 'FALSE');
-      }
-    });
+    const nowTs = nowIso();
 
-    // Insertar nueva lista de redes
-    networks.forEach(net => {
-      const row = new Array(7).fill('');
-      row[COL.WIFI_SCAN.SCAN_ID       - 1] = generateId();
-      row[COL.WIFI_SCAN.MAC_ADDRESS   - 1] = mac;
-      row[COL.WIFI_SCAN.SSID          - 1] = net.ssid    || '';
-      row[COL.WIFI_SCAN.RSSI          - 1] = net.rssi    || 0;
-      row[COL.WIFI_SCAN.SECURITY_TYPE - 1] = net.auth    || '';
-      row[COL.WIFI_SCAN.SCANNED_AT    - 1] = nowTs;
-      row[COL.WIFI_SCAN.IS_CURRENT    - 1] = 'TRUE';
-      sheet.appendRow(row);
-    });
+    // Build compact JSON array: [{ssid, rssi, auth, ts}]
+    const scanArray = networks.slice(0, 15).map(net => ({
+      ssid: net.ssid || '',
+      rssi: net.rssi || 0,
+      auth: net.auth || '',
+      ts:   nowTs
+    }));
 
-    addLog(mac, EV.WIFI_SCAN_PUBLISHED, nowTs, networks.length + ' redes', '', 'DEVICE');
-    return successResponse({ saved: networks.length });
+    // Store as JSON string in DEVICES.WIFI_SCAN_JSON
+    setCell(sheet, found.rowNumber, COL.DEVICES.WIFI_SCAN_JSON, JSON.stringify(scanArray));
+    setCell(sheet, found.rowNumber, COL.DEVICES.LAST_SEEN_AT,   nowTs);
+
+    return successResponse({ saved: scanArray.length });
   } finally {
     lock.releaseLock();
   }
 }
 
 // ─── Obtener escaneo vigente (GET action=get_scan) ────────────
+// Reads from DEVICES.WIFI_SCAN_JSON column.
 function handleGetScan(mac, token) {
   const userId = validateToken(token);
   if (!userId) return errorResponse('No autorizado', 'UNAUTHORIZED');
   if (!mac)    return errorResponse('mac es requerido', 'MISSING_MAC');
 
-  const sheet = getSheet(SHEET_NAMES.DEVICE_WIFI_SCAN);
-  const rows  = getAllRows(sheet).filter(
-    r => String(r[COL.WIFI_SCAN.MAC_ADDRESS - 1]).toUpperCase() === mac &&
-         String(r[COL.WIFI_SCAN.IS_CURRENT  - 1]) === 'TRUE'
-  );
+  const sheet = getSheet(SHEET_NAMES.DEVICES);
+  const found = findRowByCol(sheet, COL.DEVICES.MAC_ADDRESS, mac);
+  if (!found) return errorResponse('Dispositivo no encontrado', 'NOT_FOUND');
 
-  const networks = rows
-    .sort((a, b) => Number(b[COL.WIFI_SCAN.RSSI - 1]) - Number(a[COL.WIFI_SCAN.RSSI - 1]))
-    .map(r => ({
-      ssid:          String(r[COL.WIFI_SCAN.SSID          - 1]),
-      rssi:          Number(r[COL.WIFI_SCAN.RSSI          - 1]),
-      security_type: String(r[COL.WIFI_SCAN.SECURITY_TYPE - 1]),
-      scanned_at:    String(r[COL.WIFI_SCAN.SCANNED_AT    - 1])
+  let networks = [];
+  try {
+    const scanJson = String(found.rowData[COL.DEVICES.WIFI_SCAN_JSON - 1] || '');
+    if (scanJson) networks = JSON.parse(scanJson);
+  } catch (_) { /* invalid JSON */ }
+
+  // Map to webapp-expected format and sort by signal strength
+  const mapped = networks
+    .sort((a, b) => (b.rssi || 0) - (a.rssi || 0))
+    .map(n => ({
+      ssid:          n.ssid || '',
+      rssi:          n.rssi || 0,
+      security_type: n.auth || '',
+      scanned_at:    n.ts   || ''
     }));
 
-  return successResponse({ networks: networks, count: networks.length });
+  return successResponse({ networks: mapped, count: mapped.length });
 }
 
 // ─── Guardar credenciales WiFi desde web app (POST action=wifi_config) ─
@@ -81,14 +83,19 @@ function handleWifiConfig(mac, body) {
   // Password can be empty for OPEN networks
   if (password === undefined || password === null) return errorResponse('password es requerido', 'MISSING_PASSWORD');
 
-  // Validar que el SSID pertenece a un escaneo vigente de este dispositivo
-  const scanSheet = getSheet(SHEET_NAMES.DEVICE_WIFI_SCAN);
-  const scanRows  = getAllRows(scanSheet).filter(
-    r => String(r[COL.WIFI_SCAN.MAC_ADDRESS - 1]).toUpperCase() === mac &&
-         String(r[COL.WIFI_SCAN.IS_CURRENT  - 1]) === 'TRUE' &&
-         String(r[COL.WIFI_SCAN.SSID        - 1]) === ssid
-  );
-  if (!scanRows.length)
+  // Validate that the SSID exists in the device's current scan
+  const devSheet = getSheet(SHEET_NAMES.DEVICES);
+  const devFound = findRowByCol(devSheet, COL.DEVICES.MAC_ADDRESS, mac);
+  if (!devFound) return errorResponse('Dispositivo no encontrado', 'NOT_FOUND');
+
+  let scanNetworks = [];
+  try {
+    const scanJson = String(devFound.rowData[COL.DEVICES.WIFI_SCAN_JSON - 1] || '');
+    if (scanJson) scanNetworks = JSON.parse(scanJson);
+  } catch (_) {}
+
+  const ssidExists = scanNetworks.some(n => n.ssid === ssid);
+  if (!ssidExists)
     return errorResponse('SSID no encontrado en el escaneo vigente del dispositivo', 'SSID_NOT_IN_SCAN');
 
   const lock = LockService.getScriptLock();
@@ -107,13 +114,9 @@ function handleWifiConfig(mac, body) {
     row[COL.WIFI_CREDS.REQUESTED_AT         - 1] = nowTs;
     sheet.appendRow(row);
 
-    // Actualizar estado del dispositivo
-    const devSheet = getSheet(SHEET_NAMES.DEVICES);
-    const found    = findRowByCol(devSheet, COL.DEVICES.MAC_ADDRESS, mac);
-    if (found) {
-      setCell(devSheet, found.rowNumber, COL.DEVICES.STATUS,     ST.CONFIG_PENDING);
-      setCell(devSheet, found.rowNumber, COL.DEVICES.UPDATED_AT, nowTs);
-    }
+    // Update device status
+    setCell(devSheet, devFound.rowNumber, COL.DEVICES.STATUS,     ST.CONFIG_PENDING);
+    setCell(devSheet, devFound.rowNumber, COL.DEVICES.UPDATED_AT, nowTs);
 
     addLog(mac, EV.WIFI_CONFIG_REQUESTED, nowTs, ssid, '', 'WEBAPP');
     return successResponse({ status: ST.PENDING });
