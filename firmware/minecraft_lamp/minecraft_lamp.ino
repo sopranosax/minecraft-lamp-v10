@@ -1,6 +1,6 @@
 // ============================================================
 // minecraft_lamp.ino  --  Loop cooperativo principal
-// IoT Lampara WiFi v10  --  Firmware v1.2.1
+// IoT Lampara WiFi v10  --  Firmware v1.2.2
 //
 // Hardware:
 //   ESP32, NeoPixel WS2812B, PIR HC-SR501, RTC DS3231
@@ -356,6 +356,8 @@ void _pollBackend() {
   }
 
   // Aplicar config al LED
+  DBGF("  [POLL] Config: pwr=%s color=%s bri=%d\n",
+       cfg.manualPowerState, cfg.manualColorHex, cfg.manualBrightness);
   led.applyConfig(cfg.manualPowerState, cfg.manualColorHex, cfg.manualBrightness);
 
   // WiFi pendiente

@@ -13,10 +13,10 @@ public:
   bool begin() {
     Wire.begin(RTC_SDA_PIN, RTC_SCL_PIN);
     if (!rtc.begin()) {
-      DBGLN("[RTC] ERROR: DS3231 no encontrado.");
+      DBGLN("  [RTC] DS3231 no encontrado");
       return false;
     }
-    DBGLN("[RTC] DS3231 OK.");
+    DBGLN("  [RTC] DS3231 OK");
     return true;
   }
 
@@ -25,7 +25,7 @@ public:
    * Implementa D4: "Desde NTP durante bootstrap".
    */
   void syncWithNTP() {
-    DBGLN("[RTC] Sincronizando con NTP...");
+    DBGLN("  [RTC] Sincronizando con NTP...");
     configTime(0, 0, NTP_SERVER_1, NTP_SERVER_2);
     setenv("TZ", NTP_TIMEZONE, 1);
     tzset();
@@ -42,10 +42,10 @@ public:
       time_t now;
       time(&now);
       rtc.adjust(DateTime((uint32_t)now));
-      DBGF("[RTC] Sincronizado: %02d:%02d:%02d\n",
+      DBGF("  [RTC] Sincronizado: %02d:%02d:%02d\n",
            timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     } else {
-      DBGLN("[RTC] WARN: NTP falló - usando hora interna del DS3231.");
+      DBGLN("  [RTC] NTP fallo - usando hora interna DS3231");
     }
   }
 

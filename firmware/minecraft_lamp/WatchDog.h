@@ -17,7 +17,7 @@ public:
     };
     esp_task_wdt_reconfigure(&wdt_cfg);
     esp_task_wdt_add(NULL); // Registrar tarea actual
-    DBGF("[WDT] Inicializado: timeout=%ds\n", WATCHDOG_TIMEOUT_S);
+    DBGF("  [WDT] Inicializado: timeout=%ds\n", WATCHDOG_TIMEOUT_S);
   }
 
   // Llamar en CADA iteración del loop principal

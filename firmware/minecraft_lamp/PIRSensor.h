@@ -10,7 +10,7 @@ public:
   void begin() {
     pinMode(PIR_PIN, INPUT);
     _lastTrigger = 0;
-    DBGLN("[PIR] Inicializado.");
+    DBGLN("  [PIR] Inicializado");
   }
 
   /**
@@ -22,7 +22,7 @@ public:
       unsigned long now = millis();
       if (now - _lastTrigger >= PIR_DEBOUNCE_MS) {
         _lastTrigger = now;
-        DBGLN("[PIR] ¡Movimiento detectado!");
+        DBGLN("  [PIR] Movimiento detectado");
         return true;
       }
     }

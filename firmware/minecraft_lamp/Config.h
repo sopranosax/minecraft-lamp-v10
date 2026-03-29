@@ -47,7 +47,7 @@
 #define NTP_TIMEZONE "CLT3"
 
 // ─── Firmware version ─────────────────────────────────────────
-#define FIRMWARE_VERSION "1.2.1"
+#define FIRMWARE_VERSION "1.2.2"
 
 // ─── Debug serial ─────────────────────────────────────────────
 #define DEBUG_SERIAL true // false para producción

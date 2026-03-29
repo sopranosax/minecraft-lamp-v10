@@ -95,7 +95,7 @@ public:
   }
 
 private:
-  // POST con body JSON → parsea respuesta en `respDoc`
+  // POST con body JSON, parsea respuesta en respDoc
   bool _post(const char* action, JsonDocument& body, JsonDocument& respDoc) {
     HTTPClient http;
     String url = String(BACKEND_URL) + "?action=" + action;
@@ -108,7 +108,7 @@ private:
 
     int code = http.POST(bodyStr);
     if (code < 0) {
-      DBGF("    [HTTP] POST %s FALLO cod=%d\n", action, code);
+      DBGF("    [HTTP] POST %s error=%d\n", action, code);
       http.end();
       return false;
     }
@@ -116,15 +116,22 @@ private:
     String payload = http.getString();
     http.end();
 
+    if (code != 200) {
+      DBGF("    [HTTP] POST %s cod=%d\n", action, code);
+    }
+
     DeserializationError err = deserializeJson(respDoc, payload);
     if (err != DeserializationError::Ok) {
-      DBGF("    [HTTP] POST %s JSON parse error\n", action);
+      DBGF("    [HTTP] POST %s JSON error: %s\n", action, err.c_str());
+      // Show first 80 chars of response for diagnosis
+      String preview = payload.substring(0, 80);
+      DBGF("    [HTTP] Resp: %s...\n", preview.c_str());
       return false;
     }
     return true;
   }
 
-  // GET a URL completa → parsea respuesta en `respDoc`
+  // GET a URL completa, parsea respuesta en respDoc
   bool _get(const String& url, JsonDocument& respDoc) {
     HTTPClient http;
     http.begin(url);
@@ -132,7 +139,7 @@ private:
 
     int code = http.GET();
     if (code < 0) {
-      DBGF("    [HTTP] GET FALLO cod=%d\n", code);
+      DBGF("    [HTTP] GET error=%d\n", code);
       http.end();
       return false;
     }
@@ -140,9 +147,15 @@ private:
     String payload = http.getString();
     http.end();
 
+    if (code != 200) {
+      DBGF("    [HTTP] GET cod=%d\n", code);
+    }
+
     DeserializationError err = deserializeJson(respDoc, payload);
     if (err != DeserializationError::Ok) {
-      DBGLN("    [HTTP] GET JSON parse error");
+      DBGF("    [HTTP] GET JSON error: %s\n", err.c_str());
+      String preview = payload.substring(0, 80);
+      DBGF("    [HTTP] Resp: %s...\n", preview.c_str());
       return false;
     }
     return true;
