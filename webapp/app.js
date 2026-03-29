@@ -128,19 +128,17 @@ async function loadDevices() {
       card.className = 'device-card';
       card.dataset.mac = dev.mac_address;
       card.innerHTML = `
-        <div class="device-led ${isOn ? 'on' : 'off'}">💡</div>
+        <div class="mc-lamp ${isOn ? 'on' : 'off'}"></div>
         <div class="device-info">
           <div class="device-name">${dev.device_alias || dev.mac_address}</div>
           <div class="device-mac">${dev.mac_address}</div>
-          <div class="device-meta">
-            <span class="status-pill ${isOnline ? 'online' : 'offline'}">
-              ${isOnline ? 'Online' : 'Offline'}
-            </span>
-            &nbsp;${dev.current_wifi_ssid ? '📶 ' + dev.current_wifi_ssid : ''}
-            &nbsp;${formatDate(dev.last_seen_at)}
+          <div class="device-row">
+            <span class="status-pill ${isOnline ? 'online' : 'offline'}">${isOnline ? 'Online' : 'Offline'}</span>
           </div>
+          ${dev.current_wifi_ssid ? `<div class="device-row device-wifi">📶 ${dev.current_wifi_ssid}</div>` : ''}
+          <div class="device-row device-seen">🕐 ${formatDate(dev.last_seen_at)}</div>
         </div>
-        <button class="btn-delete-device" title="Eliminar lámpara" data-mac="${dev.mac_address}" data-alias="${dev.device_alias || dev.mac_address}">🗑</button>
+        <button class="btn-delete-device mc-tnt" title="Eliminar lámpara" data-mac="${dev.mac_address}" data-alias="${dev.device_alias || dev.mac_address}"></button>
       `;
       // Navigate to detail on card click (but not on delete button)
       card.addEventListener('click', (e) => {

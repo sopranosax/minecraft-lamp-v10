@@ -352,9 +352,9 @@ input[type="range"].range-slider::-moz-range-thumb {
   border: 3px solid;
   border-color: var(--mc-border-hi) var(--mc-border-lo) var(--mc-border-lo) var(--mc-border-hi);
   box-shadow: 0 3px 0 rgba(0,0,0,0.5);
-  padding: .85rem; cursor: pointer;
+  padding: .65rem .75rem; cursor: pointer;
   transition: background var(--transition);
-  display: flex; align-items: center; gap: .75rem;
+  display: flex; align-items: flex-start; gap: .6rem;
 }
 .device-card:hover {
   background: #b0b0ff;
@@ -362,25 +362,77 @@ input[type="range"].range-slider::-moz-range-thumb {
 .device-card:active {
   border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
 }
-.device-led {
-  width: 40px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 28px; flex-shrink: 0;
+
+/* -- Minecraft Pixel-Art Lamp Icon -------------------------- */
+.mc-lamp {
+  width: 36px; height: 36px; flex-shrink: 0;
   image-rendering: pixelated;
+  position: relative;
+  margin-top: 2px;
+  /* 6x6 pixel grid = redstone lamp block */
+  background:
+    /* outer border - dark */
+    linear-gradient(#4a3526, #4a3526) 0 0 / 100% 6px,
+    linear-gradient(#4a3526, #4a3526) 0 30px / 100% 6px,
+    linear-gradient(#4a3526, #4a3526) 0 0 / 6px 100%,
+    linear-gradient(#4a3526, #4a3526) 30px 0 / 6px 100%,
+    /* inner cross pattern */
+    linear-gradient(#6b4d35, #6b4d35) 6px 6px / 6px 24px,
+    linear-gradient(#6b4d35, #6b4d35) 6px 6px / 24px 6px,
+    linear-gradient(#6b4d35, #6b4d35) 24px 6px / 6px 24px,
+    linear-gradient(#6b4d35, #6b4d35) 6px 24px / 24px 6px,
+    /* center glow panel */
+    linear-gradient(#553322, #553322) 12px 12px / 12px 12px,
+    /* background fill */
+    #3d2a1a;
+  background-repeat: no-repeat;
+  border: 2px solid;
+  border-color: #6b4d35 #2a1a0e #2a1a0e #6b4d35;
 }
-.device-led.on  {
-  filter: drop-shadow(0 0 8px rgba(85,255,255,0.8));
+.mc-lamp.on {
+  /* Glowing redstone lamp */
+  background:
+    /* outer border */
+    linear-gradient(#8b6b47, #8b6b47) 0 0 / 100% 6px,
+    linear-gradient(#8b6b47, #8b6b47) 0 30px / 100% 6px,
+    linear-gradient(#8b6b47, #8b6b47) 0 0 / 6px 100%,
+    linear-gradient(#8b6b47, #8b6b47) 30px 0 / 6px 100%,
+    /* inner cross */
+    linear-gradient(#cc8844, #cc8844) 6px 6px / 6px 24px,
+    linear-gradient(#cc8844, #cc8844) 6px 6px / 24px 6px,
+    linear-gradient(#cc8844, #cc8844) 24px 6px / 6px 24px,
+    linear-gradient(#cc8844, #cc8844) 6px 24px / 24px 6px,
+    /* center bright glow */
+    linear-gradient(#ffcc66, #ffcc66) 12px 12px / 12px 12px,
+    /* base */
+    #aa7733;
+  background-repeat: no-repeat;
+  border-color: #cc8844 #5a3a1e #5a3a1e #cc8844;
+  box-shadow: 0 0 12px rgba(255,204,102,0.6), 0 0 24px rgba(255,170,0,0.3);
 }
-.device-led.off { opacity: .4; filter: grayscale(1); }
+.mc-lamp.off {
+  opacity: .65;
+}
+
 .device-info { flex: 1; min-width: 0; }
 .device-name {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--mc-dark);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+  margin-bottom: .2rem;
 }
-.device-mac  { font-size: 12px; color: var(--mc-border-lo); margin-top: .15rem; }
-.device-meta { font-size: 12px; color: var(--mc-border-mid); margin-top: .15rem; }
+.device-mac {
+  font-size: 10px; color: var(--mc-border-lo);
+  margin-bottom: .2rem;
+}
+.device-row {
+  font-size: 11px; color: var(--mc-border-mid);
+  margin-top: .15rem;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.1);
+}
+.device-wifi { color: var(--mc-border-lo); }
+.device-seen { color: var(--mc-border-lo); font-size: 10px; }
 
 /* -- Status badges ------------------------------------------ */
 .status-badge, .status-pill {
@@ -656,28 +708,46 @@ input[type="range"].range-slider::-moz-range-thumb {
 }
 
 /* ===========================================================
-   DELETE BUTTON ON DEVICE CARDS
+   DELETE BUTTON - Minecraft TNT Block
    =========================================================== */
 .btn-delete-device {
-  width: 40px; height: 40px;
+  width: 34px; height: 34px;
   flex-shrink: 0;
-  background: var(--mc-dark);
-  border: 3px solid;
-  border-color: var(--mc-border-lo) var(--mc-border-hi) var(--mc-border-hi) var(--mc-border-lo);
-  color: var(--mc-red);
-  font-size: 18px;
   cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
-  text-shadow: 1px 1px 0 #000;
+  transition: box-shadow 0.12s ease, transform 0.08s ease;
+  margin-top: 2px;
+  padding: 0;
+}
+.mc-tnt {
+  image-rendering: pixelated;
+  position: relative;
+  /* TNT block: red with dark cross and white fuse */
+  background:
+    /* top/bottom border */
+    linear-gradient(#8b2020, #8b2020) 0 0 / 100% 5px,
+    linear-gradient(#8b2020, #8b2020) 0 29px / 100% 5px,
+    /* left/right border */
+    linear-gradient(#8b2020, #8b2020) 0 0 / 5px 100%,
+    linear-gradient(#8b2020, #8b2020) 29px 0 / 5px 100%,
+    /* center horizontal band (TNT label) */
+    linear-gradient(#ddddcc, #ddddcc) 5px 10px / 24px 14px,
+    /* "T N T" letters as dark pixels */
+    linear-gradient(#442222, #442222) 8px 13px / 8px 2px,
+    linear-gradient(#442222, #442222) 11px 13px / 2px 8px,
+    linear-gradient(#442222, #442222) 20px 13px / 8px 2px,
+    linear-gradient(#442222, #442222) 23px 13px / 2px 8px,
+    /* red fill */
+    #cc3333;
+  background-repeat: no-repeat;
+  border: 2px solid;
+  border-color: #ee5555 #661111 #661111 #ee5555;
 }
 .btn-delete-device:hover {
-  background: #330000;
-  box-shadow: 0 0 12px rgba(255,85,85,0.5);
+  box-shadow: 0 0 14px rgba(255,50,50,0.6);
   transform: scale(1.1);
 }
 .btn-delete-device:active {
-  border-color: var(--mc-border-hi) var(--mc-border-lo) var(--mc-border-lo) var(--mc-border-hi);
+  border-color: #661111 #ee5555 #ee5555 #661111;
   transform: scale(0.95);
 }
 
